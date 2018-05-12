@@ -2,6 +2,7 @@ const { EventEmitter } = require('events');
 const TwitchHelix = require('twitch-helix');
 const kraken = require('twitch-api-v5');
 const tmi = require('tmi.js');
+const TwitchWebhook = require('twitch-webhook');
 const { promisify } = require('util');
 const poll = require('./poll');
 
@@ -12,6 +13,11 @@ const defaultOptions = {
   poll: true,
   clientId: null,
   clientSecret: null,
+  webhook: true,
+  callback: 'http://localhost/',
+  secret: false,
+  refreshWebhookEvery: 864000,
+  port: 80,
   logger: console,
 };
 
@@ -20,14 +26,35 @@ const tmiEvents = ['action', 'ban', 'chat', 'cheer', 'clearchat', 'connected', '
 module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
+  const helix = new TwitchHelix({
+    clientId: opts.clientId,
+    clientSecret: opts.clientSecret,
+  });
+  let intervalId;
+  const webhook = new TwitchWebhook({
+    client_id: opts.clientId,
+    callback: opts.callback,
+    secret: opts.secret,
+    lease_seconds: opts.refreshWebhookEvery,
+    listen: {
+      port: opts.port,
+      autoStart: false,
+    },
+  });
+  webhook.on('users/follows', ({ event }) => {
+    event.data.forEach(async (follow) => {
+      try {
+        const follower = await helix.getTwitchUserById(follow.from_id);
+        bus.emit('follow', follower.login);
+      } catch (err) {
+        opts.logger.error(err);
+      }
+    });
+  });
 
   // get current broadcasted game or null if not broadcasting
   const fetchBroadcast = async () => {
     try {
-      const helix = new TwitchHelix({
-        clientId: opts.clientId,
-        clientSecret: opts.clientSecret,
-      });
       const stream = await helix.getStreamInfoByUsername(opts.channel);
       if (stream) {
         const game = await helix.sendHelixRequest(`games?id=${stream.game_id}`);
@@ -91,6 +118,16 @@ module.exports = (options = {}) => {
     user.on(event, (...args) => bus.emit(event, ...args));
   });
 
+  const webhookSubscribe = async () => {
+    try {
+      const channel = await helix.getTwitchUserByName(opts.channel);
+      await webhook.subscribe('users/follows', { first: 1, to_id: channel.id });
+      opts.logger.info('subscribed to follow webhook');
+    } catch (err) {
+      opts.logger.error(err);
+    }
+  };
+
   const on = (event, handler) => bus.on(event, handler);
 
   const connect = async () => {
@@ -101,6 +138,11 @@ module.exports = (options = {}) => {
       if (opts.poll) {
         pollBroadcast.start();
         pollTopClipper.start();
+      }
+      if (opts.webhook) {
+        await webhook.listen(opts.port);
+        await webhookSubscribe();
+        intervalId = setInterval(webhookSubscribe, opts.refreshWebhookEvery * 1000);
       }
     } catch (err) {
       opts.logger.error(err);
@@ -116,6 +158,11 @@ module.exports = (options = {}) => {
         pollBroadcast.stop();
         pollTopClipper.stop();
       }
+      if (opts.webhook) {
+        await webhook.unsubscribe('*');
+        await webhook.close();
+        clearInterval(intervalId);
+      }
     } catch (err) {
       opts.logger.error(err);
     }
@@ -124,6 +171,11 @@ module.exports = (options = {}) => {
   const say = (message) => {
     user.say(`#${opts.channel}`, message);
   };
+
+  process.on('SIGINT', () => {
+    opts.logger.info(`disconnecting from channel ${opts.channel}`);
+    disconnect();
+  });
 
   return {
     on, connect, disconnect, say,

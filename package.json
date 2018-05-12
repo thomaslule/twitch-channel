@@ -24,6 +24,7 @@
   "dependencies": {
     "tmi.js": "^1.2.1",
     "twitch-api-v5": "^2.0.2",
-    "twitch-helix": "^1.0.7"
+    "twitch-helix": "^1.0.7",
+    "twitch-webhook": "^1.2.4"
   }
 }
