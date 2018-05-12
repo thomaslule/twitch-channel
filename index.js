@@ -74,6 +74,7 @@ module.exports = (options = {}) => {
   const pollTopClipper = poll(fetchTopClipper, onTopClipperChange, {
     auto_start: false,
     interval: 60 * 60 * 1000,
+    logger: opts.logger,
   });
 
   const TmiClient = tmi.client;

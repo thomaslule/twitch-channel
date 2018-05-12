@@ -1,6 +1,7 @@
 const defaultOptions = {
   interval: 5 * 60 * 1000,
   auto_start: true,
+  logger: console,
 };
 
 module.exports = (func, onChange, options = {}) => {
@@ -9,16 +10,24 @@ module.exports = (func, onChange, options = {}) => {
   let intervalId;
 
   const poll = async () => {
-    const newValue = await func();
-    if (newValue !== value) {
-      onChange(newValue, value);
+    try {
+      const newValue = await func();
+      if (newValue !== value) {
+        onChange(newValue, value);
+      }
+      value = newValue;
+    } catch (err) {
+      opts.logger.error(err);
     }
-    value = newValue;
   };
 
-  const start = () => {
-    intervalId = setInterval(poll, opts.interval);
-    poll();
+  const start = async () => {
+    try {
+      intervalId = setInterval(poll, opts.interval);
+      value = await func();
+    } catch (err) {
+      opts.logger.error(err);
+    }
   };
 
   const stop = () => {
