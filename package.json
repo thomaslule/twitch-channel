@@ -1,0 +1,29 @@
+{
+  "name": "twitch-channel",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thomaslule/twitch-channel.git"
+  },
+  "author": "thomaslule",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thomaslule/twitch-channel/issues"
+  },
+  "homepage": "https://github.com/thomaslule/twitch-channel#readme",
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.11.0"
+  },
+  "dependencies": {
+    "tmi.js": "^1.2.1",
+    "twitch-api-v5": "^2.0.2",
+    "twitch-helix": "^1.0.7"
+  }
+}
