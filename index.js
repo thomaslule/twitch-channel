@@ -10,13 +10,12 @@ const defaultOptions = {
   channel: null,
   username: null,
   token: null,
-  poll: true,
-  clientId: null,
-  clientSecret: null,
-  webhook: true,
-  callback: 'http://localhost/',
+  client_id: null,
+  client_secret: null,
+  activate_polling: true,
+  activate_webhook: true,
+  callback_url: 'http://localhost/',
   secret: false,
-  refreshWebhookEvery: 864000,
   port: 80,
   logger: console,
 };
@@ -27,8 +26,8 @@ module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
   const helix = new TwitchHelix({
-    clientId: opts.clientId,
-    clientSecret: opts.clientSecret,
+    clientId: opts.client_id,
+    clientSecret: opts.client_secret,
   });
   const webhook = Webhook(helix, bus, opts);
 
@@ -59,7 +58,7 @@ module.exports = (options = {}) => {
 
   const fetchTopClipper = async () => {
     try {
-      kraken.clientID = opts.clientId;
+      kraken.clientID = opts.client_id;
       const krakenTopClips = promisify(kraken.clips.top);
       const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
       if (res.clips.length > 0) {
@@ -105,11 +104,11 @@ module.exports = (options = {}) => {
       if (user.readyState() !== 'CONNECTING' && user.readyState() !== 'OPEN') {
         await user.connect();
       }
-      if (opts.poll) {
+      if (opts.activate_polling) {
         pollBroadcast.start();
         pollTopClipper.start();
       }
-      if (opts.webhook) {
+      if (opts.activate_webhook) {
         await webhook.start();
       }
     } catch (err) {
@@ -122,11 +121,11 @@ module.exports = (options = {}) => {
       if (user.readyState() !== 'CLOSING' && user.readyState() !== 'CLOSED') {
         await user.disconnect();
       }
-      if (opts.poll) {
+      if (opts.activate_polling) {
         pollBroadcast.stop();
         pollTopClipper.stop();
       }
-      if (opts.webhook) {
+      if (opts.activate_webhook) {
         await webhook.stop();
       }
     } catch (err) {

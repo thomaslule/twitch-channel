@@ -1,11 +1,13 @@
 const TwitchWebhook = require('twitch-webhook');
 
+const REFRESH_EVERY = 864000;
+
 module.exports = (helix, bus, opts) => {
   const webhook = new TwitchWebhook({
-    client_id: opts.clientId,
-    callback: opts.callback,
+    client_id: opts.client_id,
+    callback: opts.callback_url,
     secret: opts.secret,
-    lease_seconds: opts.refreshWebhookEvery,
+    lease_seconds: REFRESH_EVERY,
     listen: {
       autoStart: false,
     },
@@ -36,7 +38,7 @@ module.exports = (helix, bus, opts) => {
   const start = async () => {
     await webhook.listen(opts.port);
     await subscribe();
-    intervalId = setInterval(subscribe, opts.refreshWebhookEvery * 1000);
+    intervalId = setInterval(subscribe, REFRESH_EVERY * 1000);
   };
 
   const stop = async () => {
