@@ -2,8 +2,8 @@ const { EventEmitter } = require('events');
 const TwitchHelix = require('twitch-helix');
 const kraken = require('twitch-api-v5');
 const tmi = require('tmi.js');
-const TwitchWebhook = require('twitch-webhook');
 const { promisify } = require('util');
+const Webhook = require('./webhook');
 const poll = require('./poll');
 
 const defaultOptions = {
@@ -30,27 +30,7 @@ module.exports = (options = {}) => {
     clientId: opts.clientId,
     clientSecret: opts.clientSecret,
   });
-  let intervalId;
-  const webhook = new TwitchWebhook({
-    client_id: opts.clientId,
-    callback: opts.callback,
-    secret: opts.secret,
-    lease_seconds: opts.refreshWebhookEvery,
-    listen: {
-      port: opts.port,
-      autoStart: false,
-    },
-  });
-  webhook.on('users/follows', ({ event }) => {
-    event.data.forEach(async (follow) => {
-      try {
-        const follower = await helix.getTwitchUserById(follow.from_id);
-        bus.emit('follow', follower.login);
-      } catch (err) {
-        opts.logger.error(err);
-      }
-    });
-  });
+  const webhook = Webhook(helix, bus, opts);
 
   // get current broadcasted game or null if not broadcasting
   const fetchBroadcast = async () => {
@@ -118,16 +98,6 @@ module.exports = (options = {}) => {
     user.on(event, (...args) => bus.emit(event, ...args));
   });
 
-  const webhookSubscribe = async () => {
-    try {
-      const channel = await helix.getTwitchUserByName(opts.channel);
-      await webhook.subscribe('users/follows', { first: 1, to_id: channel.id });
-      opts.logger.info('subscribed to follow webhook');
-    } catch (err) {
-      opts.logger.error(err);
-    }
-  };
-
   const on = (event, handler) => bus.on(event, handler);
 
   const connect = async () => {
@@ -140,9 +110,7 @@ module.exports = (options = {}) => {
         pollTopClipper.start();
       }
       if (opts.webhook) {
-        await webhook.listen(opts.port);
-        await webhookSubscribe();
-        intervalId = setInterval(webhookSubscribe, opts.refreshWebhookEvery * 1000);
+        await webhook.start();
       }
     } catch (err) {
       opts.logger.error(err);
@@ -159,9 +127,7 @@ module.exports = (options = {}) => {
         pollTopClipper.stop();
       }
       if (opts.webhook) {
-        await webhook.unsubscribe('*');
-        await webhook.close();
-        clearInterval(intervalId);
+        await webhook.stop();
       }
     } catch (err) {
       opts.logger.error(err);
