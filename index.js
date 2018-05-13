@@ -25,11 +25,12 @@ const tmiEvents = ['action', 'ban', 'chat', 'cheer', 'clearchat', 'connected', '
 module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
-  const helix = new TwitchHelix({
-    clientId: opts.client_id,
-    clientSecret: opts.client_secret,
-  });
-  const webhook = Webhook(helix, bus, opts);
+  const helix = opts.activate_polling || opts.activate_webhook
+    ? new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret })
+    : null;
+  const webhook = opts.activate_webhook
+    ? Webhook(helix, bus, opts)
+    : null;
 
   // get current broadcasted game or null if not broadcasting
   const fetchBroadcast = async () => {
@@ -52,9 +53,7 @@ module.exports = (options = {}) => {
     else bus.emit('stream-end');
   };
 
-  const pollBroadcast = poll(fetchBroadcast, onBroadcastChange, {
-    auto_start: false,
-  });
+  const pollBroadcast = poll(fetchBroadcast, onBroadcastChange, { auto_start: false });
 
   const fetchTopClipper = async () => {
     try {
