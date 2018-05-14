@@ -43,6 +43,7 @@ module.exports = (helix, bus, opts) => {
 
   const stop = async () => {
     await webhook.unsubscribe('*');
+    opts.logger.info('unsubscribed from follow webhook');
     await webhook.close();
     clearInterval(intervalId);
   };

@@ -117,15 +117,15 @@ module.exports = (options = {}) => {
 
   const disconnect = async () => {
     try {
-      if (user.readyState() !== 'CLOSING' && user.readyState() !== 'CLOSED') {
-        await user.disconnect();
-      }
       if (opts.activate_polling) {
         pollBroadcast.stop();
         pollTopClipper.stop();
       }
       if (opts.activate_webhook) {
         await webhook.stop();
+      }
+      if (user.readyState() !== 'CLOSING' && user.readyState() !== 'CLOSED') {
+        await user.disconnect();
       }
     } catch (err) {
       opts.logger.error(err);
@@ -135,11 +135,6 @@ module.exports = (options = {}) => {
   const say = (message) => {
     user.say(`#${opts.channel}`, message);
   };
-
-  process.on('SIGINT', () => {
-    opts.logger.info(`disconnecting from channel ${opts.channel}`);
-    disconnect();
-  });
 
   return {
     on, connect, disconnect, say,
