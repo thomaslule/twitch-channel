@@ -21,13 +21,9 @@ module.exports = (func, onChange, options = {}) => {
     }
   };
 
-  const start = async () => {
-    try {
-      intervalId = setInterval(poll, opts.interval);
-      value = await func();
-    } catch (err) {
-      opts.logger.error(err);
-    }
+  const start = () => {
+    intervalId = setInterval(poll, opts.interval);
+    poll();
   };
 
   const stop = () => {

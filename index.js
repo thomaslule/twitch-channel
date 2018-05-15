@@ -1,10 +1,9 @@
 const { EventEmitter } = require('events');
 const TwitchHelix = require('twitch-helix');
-const kraken = require('twitch-api-v5');
-const tmi = require('tmi.js');
-const { promisify } = require('util');
+const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
-const poll = require('./poll');
+const PollBroadcast = require('./poll-broadcast');
+const PollTopClipper = require('./poll-top-clipper');
 
 const defaultOptions = {
   channel: null,
@@ -20,93 +19,37 @@ const defaultOptions = {
   logger: console,
 };
 
-const tmiEvents = ['action', 'ban', 'chat', 'cheer', 'clearchat', 'connected', 'connecting', 'disconnected', 'emoteonly', 'emotesets', 'followersonly', 'hosted', 'hosting', 'join', 'logon', 'message', 'mod', 'mods', 'notice', 'part', 'ping', 'pong', 'r9kbeta', 'reconnect', 'resub', 'roomstate', 'serverchange', 'slowmode', 'subscribers', 'subscription', 'timeout', 'unhost', 'unmod', 'whisper'];
-
 module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
+
   const helix = opts.activate_polling || opts.activate_webhook
     ? new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret })
     : null;
+
+  const pollBroadcast = PollBroadcast(helix, bus, opts);
+
+  const pollTopClipper = PollTopClipper(bus, opts);
+
   const webhook = opts.activate_webhook
     ? Webhook(helix, bus, opts)
     : null;
 
-  // get current broadcasted game or null if not broadcasting
-  const fetchBroadcast = async () => {
-    try {
-      const stream = await helix.getStreamInfoByUsername(opts.channel);
-      if (stream) {
-        const game = await helix.sendHelixRequest(`games?id=${stream.game_id}`);
-        return game[0].name;
-      }
-      return null;
-    } catch (err) {
-      opts.logger.error(err);
-      return null;
-    }
-  };
-
-  const onBroadcastChange = (currentGame, previousGame) => {
-    if (previousGame && currentGame) bus.emit('stream-change-game', currentGame);
-    else if (currentGame) bus.emit('stream-begin', currentGame);
-    else bus.emit('stream-end');
-  };
-
-  const pollBroadcast = poll(fetchBroadcast, onBroadcastChange, { auto_start: false });
-
-  const fetchTopClipper = async () => {
-    try {
-      kraken.clientID = opts.client_id;
-      const krakenTopClips = promisify(kraken.clips.top);
-      const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
-      if (res.clips.length > 0) {
-        return res.clips[0].curator.name;
-      }
-      return null;
-    } catch (err) {
-      opts.logger.error(err);
-      return null;
-    }
-  };
-
-  const onTopClipperChange = (topClipper) => {
-    if (topClipper !== null) {
-      bus.emit('top-clipper-change', topClipper);
-    }
-  };
-
-  const pollTopClipper = poll(fetchTopClipper, onTopClipperChange, {
-    auto_start: false,
-    interval: 60 * 60 * 1000,
-    logger: opts.logger,
-  });
-
-  const TmiClient = tmi.client;
-  const user = new TmiClient({
-    options: { debug: false },
-    connection: { reconnect: true },
-    identity: {
-      username: opts.username,
-      password: opts.token,
-    },
-    channels: [`#${opts.channel}`],
-  });
-  tmiEvents.forEach((event) => {
-    user.on(event, (...args) => bus.emit(event, ...args));
-  });
+  const chatBot = ChatBot(bus, opts);
 
   const on = (event, handler) => bus.on(event, handler);
 
   const connect = async () => {
+    if (opts.activate_polling) {
+      pollBroadcast.start();
+      pollTopClipper.start();
+    }
     try {
-      if (user.readyState() !== 'CONNECTING' && user.readyState() !== 'OPEN') {
-        await user.connect();
-      }
-      if (opts.activate_polling) {
-        pollBroadcast.start();
-        pollTopClipper.start();
-      }
+      await chatBot.connect();
+    } catch (err) {
+      opts.logger.error(err);
+    }
+    try {
       if (opts.activate_webhook) {
         await webhook.start();
       }
@@ -116,25 +59,25 @@ module.exports = (options = {}) => {
   };
 
   const disconnect = async () => {
-    try {
-      if (opts.activate_polling) {
-        pollBroadcast.stop();
-        pollTopClipper.stop();
-      }
-      if (opts.activate_webhook) {
+    if (opts.activate_polling) {
+      pollBroadcast.stop();
+      pollTopClipper.stop();
+    }
+    if (opts.activate_webhook) {
+      try {
         await webhook.stop();
+      } catch (err) {
+        opts.logger.error(err);
       }
-      if (user.readyState() !== 'CLOSING' && user.readyState() !== 'CLOSED') {
-        await user.disconnect();
-      }
+    }
+    try {
+      await chatBot.disconnect();
     } catch (err) {
       opts.logger.error(err);
     }
   };
 
-  const say = (message) => {
-    user.say(`#${opts.channel}`, message);
-  };
+  const { say } = chatBot;
 
   return {
     on, connect, disconnect, say,
