@@ -10,15 +10,11 @@ module.exports = (func, onChange, options = {}) => {
   let intervalId;
 
   const poll = async () => {
-    try {
-      const newValue = await func();
-      if (newValue !== value) {
-        onChange(newValue, value);
-      }
-      value = newValue;
-    } catch (err) {
-      opts.logger.error(err);
+    const newValue = await func();
+    if (newValue !== value) {
+      onChange(newValue, value);
     }
+    value = newValue;
   };
 
   const start = () => {

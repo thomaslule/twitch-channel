@@ -47,14 +47,14 @@ module.exports = (options = {}) => {
     try {
       await chatBot.connect();
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not connect chatbot', err);
     }
     try {
       if (opts.activate_webhook) {
         await webhook.start();
       }
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not start webhook', err);
     }
   };
 
@@ -67,13 +67,13 @@ module.exports = (options = {}) => {
       try {
         await webhook.stop();
       } catch (err) {
-        opts.logger.error(err);
+        opts.logger.error('could not stop webhook', err);
       }
     }
     try {
       await chatBot.disconnect();
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not disconnect chatbot', err);
     }
   };
 

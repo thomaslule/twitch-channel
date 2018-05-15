@@ -5,13 +5,15 @@ module.exports = (helix, bus, opts) => {
   const fetchBroadcast = async () => {
     try {
       const stream = await helix.getStreamInfoByUsername(opts.channel);
+      let game = null;
       if (stream) {
-        const game = await helix.sendHelixRequest(`games?id=${stream.game_id}`);
-        return game[0].name;
+        const gameData = await helix.sendHelixRequest(`games?id=${stream.game_id}`);
+        game = gameData[0].name;
       }
-      return null;
+      opts.logger.info(`polled current broadcasted game: ${game}`);
+      return game;
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not fetch current broadcast', err);
       return null;
     }
   };
@@ -22,5 +24,8 @@ module.exports = (helix, bus, opts) => {
     else bus.emit('stream-end');
   };
 
-  return poll(fetchBroadcast, onBroadcastChange, { auto_start: false });
+  return poll(fetchBroadcast, onBroadcastChange, {
+    auto_start: false,
+    logger: opts.logger,
+  });
 };

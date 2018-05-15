@@ -20,7 +20,7 @@ module.exports = (helix, bus, opts) => {
         const follower = await helix.getTwitchUserById(follow.from_id);
         bus.emit('follow', follower.login);
       } catch (err) {
-        opts.logger.error(err);
+        opts.logger.error('could not fetch follower login', err);
       }
     });
   });
@@ -31,7 +31,7 @@ module.exports = (helix, bus, opts) => {
       await webhook.subscribe('users/follows', { first: 1, to_id: channel.id });
       opts.logger.info('subscribed to follow webhook');
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not subscribe to follow webhook', err);
     }
   };
 

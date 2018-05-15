@@ -5,15 +5,19 @@ const poll = require('./poll');
 module.exports = (bus, opts) => {
   const fetchTopClipper = async () => {
     try {
+      // do this each time because kraken may be used elsewhere
       kraken.clientID = opts.client_id;
       const krakenTopClips = promisify(kraken.clips.top);
+
       const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
+      let topClipper = null;
       if (res.clips.length > 0) {
-        return res.clips[0].curator.name;
+        topClipper = res.clips[0].curator.name;
       }
-      return null;
+      opts.logger.info(`polled current top clipper: ${topClipper}`);
+      return topClipper;
     } catch (err) {
-      opts.logger.error(err);
+      opts.logger.error('could not fetch current top clipper', err);
       return null;
     }
   };
