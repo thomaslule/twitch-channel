@@ -1,6 +1,6 @@
-const tmi = require('tmi.js');
+const tmi = require('twitch-js');
 
-const tmiEvents = ['action', 'ban', 'chat', 'cheer', 'clearchat', 'connected', 'connecting', 'disconnected', 'emoteonly', 'emotesets', 'followersonly', 'hosted', 'hosting', 'join', 'logon', 'message', 'mod', 'mods', 'notice', 'part', 'ping', 'pong', 'r9kbeta', 'reconnect', 'resub', 'roomstate', 'serverchange', 'slowmode', 'subscribers', 'subscription', 'timeout', 'unhost', 'unmod', 'whisper'];
+const tmiEvents = ['action', 'ban', 'chat', 'cheer', 'clearchat', 'connected', 'connecting', 'disconnected', 'emoteonly', 'emotesets', 'followersonly', 'hosted', 'hosting', 'join', 'logon', 'message', 'mod', 'mods', 'notice', 'part', 'ping', 'pong', 'r9kbeta', 'raid', 'reconnect', 'resub', 'ritual', 'roomstate', 'serverchange', 'slowmode', 'subgift', 'subscribers', 'subscription', 'timeout', 'unhost', 'unmod', 'whisper'];
 
 module.exports = (bus, opts) => {
   const TmiClient = tmi.client;
