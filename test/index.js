@@ -9,4 +9,5 @@ channel.on('stream-change-game', (...args) => { console.log('stream-change-game'
 channel.on('stream-end', (...args) => { console.log('stream-end', args); });
 channel.on('follow', (...args) => { console.log('follow', args); });
 channel.on('donation', (...args) => { console.log('donation', args); });
+channel.on('host', (...args) => { console.log('host', args); });
 channel.connect();

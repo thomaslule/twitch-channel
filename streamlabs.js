@@ -25,6 +25,15 @@ module.exports = (bus, opts) => {
               opts.logger.error(`donation received from ${from} but couldnt retrieve twitch user`);
             }
           }
+          if (data.type === 'host' && !data.message[0].isTest) {
+            const { name, viewers } = data.message[0];
+            const viewer = await helix.getTwitchUserByName(normalizeHandle(name));
+            if (viewer) {
+              bus.emit('host', { viewer, viewers });
+            } else {
+              opts.logger.error(`host received from ${name} but couldnt retrieve twitch user`);
+            }
+          }
         } catch (err) {
           opts.logger.error(err);
         }
