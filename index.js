@@ -2,7 +2,6 @@ const { EventEmitter } = require('events');
 const TwitchHelix = require('twitch-helix');
 const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
-const PollBroadcast = require('./poll-broadcast');
 const PollTopClipper = require('./poll-top-clipper');
 
 const defaultOptions = {
@@ -27,8 +26,6 @@ module.exports = (options = {}) => {
     ? new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret })
     : null;
 
-  const pollBroadcast = PollBroadcast(helix, bus, opts);
-
   const pollTopClipper = PollTopClipper(bus, opts);
 
   const webhook = opts.activate_webhook
@@ -41,7 +38,6 @@ module.exports = (options = {}) => {
 
   const connect = async () => {
     if (opts.activate_polling) {
-      pollBroadcast.start();
       pollTopClipper.start();
     }
     try {
@@ -60,7 +56,6 @@ module.exports = (options = {}) => {
 
   const disconnect = async () => {
     if (opts.activate_polling) {
-      pollBroadcast.stop();
       pollTopClipper.stop();
     }
     if (opts.activate_webhook) {
