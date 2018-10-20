@@ -1,8 +1,10 @@
 const TwitchWebhook = require('twitch-webhook');
+const TwitchHelix = require('twitch-helix');
 
 const REFRESH_EVERY = 864000;
 
-module.exports = (helix, bus, opts) => {
+module.exports = (bus, opts) => {
+  const helix = new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret });
   const webhook = new TwitchWebhook({
     client_id: opts.client_id,
     callback: opts.callback_url,

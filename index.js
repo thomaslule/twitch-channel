@@ -1,8 +1,8 @@
 const { EventEmitter } = require('events');
-const TwitchHelix = require('twitch-helix');
+const { promisify } = require('util');
+const kraken = require('twitch-api-v5');
 const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
-const PollTopClipper = require('./poll-top-clipper');
 
 const defaultOptions = {
   channel: null,
@@ -10,7 +10,6 @@ const defaultOptions = {
   token: null,
   client_id: null,
   client_secret: null,
-  activate_polling: true,
   activate_webhook: true,
   callback_url: 'http://localhost/',
   secret: false,
@@ -22,14 +21,8 @@ module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
 
-  const helix = opts.activate_polling || opts.activate_webhook
-    ? new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret })
-    : null;
-
-  const pollTopClipper = PollTopClipper(bus, opts);
-
   const webhook = opts.activate_webhook
-    ? Webhook(helix, bus, opts)
+    ? Webhook(bus, opts)
     : null;
 
   const chatBot = ChatBot(bus, opts);
@@ -37,9 +30,6 @@ module.exports = (options = {}) => {
   const on = (event, handler) => bus.on(event, handler);
 
   const connect = async () => {
-    if (opts.activate_polling) {
-      pollTopClipper.start();
-    }
     try {
       await chatBot.connect();
     } catch (err) {
@@ -55,9 +45,6 @@ module.exports = (options = {}) => {
   };
 
   const disconnect = async () => {
-    if (opts.activate_polling) {
-      pollTopClipper.stop();
-    }
     if (opts.activate_webhook) {
       try {
         await webhook.stop();
@@ -74,7 +61,17 @@ module.exports = (options = {}) => {
 
   const { say } = chatBot;
 
+  async function getTopClipper() {
+    kraken.clientID = opts.client_id;
+    const krakenTopClips = promisify(kraken.clips.top);
+
+    const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
+    return res.clips.length > 0
+      ? res.clips[0].curator.name
+      : null;
+  }
+
   return {
-    on, connect, disconnect, say,
+    on, connect, disconnect, say, getTopClipper,
   };
 };
