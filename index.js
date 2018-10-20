@@ -3,6 +3,7 @@ const { promisify } = require('util');
 const kraken = require('twitch-api-v5');
 const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
+const Streamlabs = require('./streamlabs');
 
 const defaultOptions = {
   channel: null,
@@ -10,6 +11,7 @@ const defaultOptions = {
   token: null,
   client_id: null,
   client_secret: null,
+  streamlabs_socket_token: null,
   activate_webhook: true,
   callback_url: 'http://localhost/',
   secret: false,
@@ -27,35 +29,31 @@ module.exports = (options = {}) => {
 
   const chatBot = ChatBot(bus, opts);
 
+  const streamlabs = Streamlabs(bus, opts);
+
   const on = (event, handler) => bus.on(event, handler);
 
   const connect = async () => {
     try {
+      streamlabs.start();
       await chatBot.connect();
-    } catch (err) {
-      opts.logger.error('could not connect chatbot', err);
-    }
-    try {
       if (opts.activate_webhook) {
         await webhook.start();
       }
     } catch (err) {
-      opts.logger.error('could not start webhook', err);
+      opts.logger.error(err);
     }
   };
 
   const disconnect = async () => {
-    if (opts.activate_webhook) {
-      try {
-        await webhook.stop();
-      } catch (err) {
-        opts.logger.error('could not stop webhook', err);
-      }
-    }
     try {
+      streamlabs.stop();
       await chatBot.disconnect();
+      if (opts.activate_webhook) {
+        await webhook.stop();
+      }
     } catch (err) {
-      opts.logger.error('could not disconnect chatbot', err);
+      opts.logger.error(err);
     }
   };
 
