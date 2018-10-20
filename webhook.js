@@ -53,7 +53,7 @@ module.exports = (bus, opts) => {
     }
   });
 
-  const subscribe = async () => {
+  async function subscribe() {
     try {
       const channel = await helix.getTwitchUserByName(opts.channel);
       await webhook.subscribe('users/follows', { first: 1, to_id: channel.id });
@@ -62,9 +62,9 @@ module.exports = (bus, opts) => {
     } catch (err) {
       opts.logger.error('could not subscribe to webhooks', err);
     }
-  };
+  }
 
-  const start = async () => {
+  async function start() {
     const stream = await helix.getStreamInfoByUsername(opts.channel);
     lastGame = stream
       ? await getGameName(stream.game_id)
@@ -72,14 +72,14 @@ module.exports = (bus, opts) => {
     await webhook.listen(opts.port);
     await subscribe();
     intervalId = setInterval(subscribe, REFRESH_EVERY * 1000);
-  };
+  }
 
-  const stop = async () => {
+  async function stop() {
     await webhook.unsubscribe('*');
     opts.logger.info('unsubscribed from webhooks');
     await webhook.close();
     clearInterval(intervalId);
-  };
+  }
 
   return { start, stop };
 };

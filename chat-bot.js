@@ -8,8 +8,8 @@ module.exports = (bus, opts) => {
     options: { debug: false },
     connection: { reconnect: true },
     identity: {
-      username: opts.username,
-      password: opts.token,
+      username: opts.bot_name,
+      password: opts.bot_token,
     },
     channels: [`#${opts.channel}`],
   });

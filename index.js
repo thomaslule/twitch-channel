@@ -6,58 +6,41 @@ const Webhook = require('./webhook');
 const Streamlabs = require('./streamlabs');
 
 const defaultOptions = {
-  channel: null,
-  username: null,
-  token: null,
-  client_id: null,
-  client_secret: null,
-  streamlabs_socket_token: null,
-  activate_webhook: true,
-  callback_url: 'http://localhost/',
-  secret: false,
-  port: 80,
   logger: console,
 };
 
 module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
   const bus = new EventEmitter();
-
-  const webhook = opts.activate_webhook
-    ? Webhook(bus, opts)
-    : null;
-
+  const webhook = Webhook(bus, opts);
   const chatBot = ChatBot(bus, opts);
-
   const streamlabs = Streamlabs(bus, opts);
 
   const on = (event, handler) => bus.on(event, handler);
 
-  const connect = async () => {
+  async function connect() {
     try {
       streamlabs.start();
       await chatBot.connect();
-      if (opts.activate_webhook) {
-        await webhook.start();
-      }
+      await webhook.start();
     } catch (err) {
       opts.logger.error(err);
     }
-  };
+  }
 
-  const disconnect = async () => {
+  async function disconnect() {
     try {
       streamlabs.stop();
       await chatBot.disconnect();
-      if (opts.activate_webhook) {
-        await webhook.stop();
-      }
+      await webhook.stop();
     } catch (err) {
       opts.logger.error(err);
     }
-  };
+  }
 
-  const { say } = chatBot;
+  function say(message) {
+    chatBot.say(message);
+  }
 
   async function getTopClipper() {
     kraken.clientID = opts.client_id;
