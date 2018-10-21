@@ -3,6 +3,7 @@
   "version": "0.1.3",
   "description": "an event emitter for your twitch channel",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "node test"
   },
