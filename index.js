@@ -50,7 +50,7 @@ module.exports = (options = {}) => {
 
     const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
     return res.clips.length > 0
-      ? res.clips[0].curator.name
+      ? res.clips[0].curator
       : null;
   }
 
