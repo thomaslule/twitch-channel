@@ -7,6 +7,8 @@ const Streamlabs = require('./streamlabs');
 
 const defaultOptions = {
   logger: console,
+  port: 80,
+  is_test: false,
 };
 
 module.exports = (options = {}) => {

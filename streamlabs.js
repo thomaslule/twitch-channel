@@ -12,7 +12,7 @@ module.exports = (bus, opts) => {
 
   function eventHandler(event) {
     try {
-      if (event.message[0].isTest) {
+      if (!opts.is_test && event.message[0].isTest) {
         return;
       }
       if (event.type === 'donation') {
