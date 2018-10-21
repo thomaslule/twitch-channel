@@ -22,13 +22,8 @@ module.exports = (bus, opts) => {
   }
 
   webhook.on('users/follows', ({ event }) => {
-    event.data.forEach(async (follow) => {
-      try {
-        const follower = await helix.getTwitchUserById(follow.from_id);
-        bus.emit('follow', follower.login);
-      } catch (err) {
-        opts.logger.error('could not fetch follower login', err);
-      }
+    event.data.forEach((follow) => {
+      bus.emit('follow', follow.from_id);
     });
   });
 
