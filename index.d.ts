@@ -9,6 +9,7 @@ declare namespace TwitchChannel {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
     say(message: string): void;
+    getTwitchUserByName(name: string): Promise<any>;
     getTopClipper(): Promise<any>;
   }
 

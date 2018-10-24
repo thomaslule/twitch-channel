@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events');
 const { promisify } = require('util');
 const kraken = require('twitch-api-v5');
+const TwitchHelix = require('twitch-helix');
 const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
 const Streamlabs = require('./streamlabs');
@@ -18,6 +19,7 @@ module.exports = (options = {}) => {
   const webhook = Webhook(bus, opts);
   const chatBot = ChatBot(bus, opts);
   const streamlabs = Streamlabs(bus, opts);
+  const helix = new TwitchHelix({ clientId: opts.client_id, clientSecret: opts.client_secret });
 
   const on = (event, handler) => {
     bus.on(event, async (...args) => {
@@ -53,6 +55,15 @@ module.exports = (options = {}) => {
     chatBot.say(message);
   }
 
+  async function getTwitchUserByName(name) {
+    const login = name
+      .normalize('NFD') // split accented characters : è => e`
+      .toLowerCase()
+      .replace(/ /g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+    return helix.getTwitchUserByName(login);
+  }
+
   async function getTopClipper() {
     kraken.clientID = opts.client_id;
     const krakenTopClips = promisify(kraken.clips.top);
@@ -64,6 +75,6 @@ module.exports = (options = {}) => {
   }
 
   return {
-    on, connect, disconnect, say, getTopClipper,
+    on, connect, disconnect, say, getTwitchUserByName, getTopClipper,
   };
 };

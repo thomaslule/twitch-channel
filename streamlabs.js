@@ -1,11 +1,4 @@
 const io = require('socket.io-client');
-// const TwitchHelix = require('twitch-helix');
-
-// const normalizeHandle = str => str
-//   .normalize('NFD') // split accented characters : è => e`
-//   .toLowerCase()
-//   .replace(/ /g, '_')
-//   .replace(/[^a-z0-9_]/g, '');
 
 module.exports = (bus, opts) => {
   let socket;
