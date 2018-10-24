@@ -23,6 +23,7 @@ declare namespace TwitchChannel {
     secret: string;
     port?: number;
     logger: any;
+    error_handler: (err: any) => void;
     is_test?: boolean;
   }
 

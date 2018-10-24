@@ -9,6 +9,7 @@ const defaultOptions = {
   logger: console,
   port: 80,
   is_test: false,
+  error_handler: (err) => { throw err; },
 };
 
 module.exports = (options = {}) => {
@@ -18,7 +19,15 @@ module.exports = (options = {}) => {
   const chatBot = ChatBot(bus, opts);
   const streamlabs = Streamlabs(bus, opts);
 
-  const on = (event, handler) => bus.on(event, handler);
+  const on = (event, handler) => {
+    bus.on(event, async (...args) => {
+      try {
+        await handler(...args);
+      } catch (err) {
+        opts.error_handler(err);
+      }
+    });
+  };
 
   async function connect() {
     try {
