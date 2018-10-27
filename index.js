@@ -1,6 +1,4 @@
 const { EventEmitter } = require('events');
-const { promisify } = require('util');
-const kraken = require('twitch-api-v5');
 const TwitchHelix = require('twitch-helix');
 const ChatBot = require('./chat-bot');
 const Webhook = require('./webhook');
@@ -65,13 +63,11 @@ module.exports = (options = {}) => {
   }
 
   async function getTopClipper() {
-    kraken.clientID = opts.client_id;
-    const krakenTopClips = promisify(kraken.clips.top);
-
-    const res = await krakenTopClips({ channel: opts.channel, period: 'week', limit: 1 });
-    return res.clips.length > 0
-      ? res.clips[0].curator
-      : null;
+    const now = new Date();
+    const lastWeek = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const channel = await helix.getTwitchUserByName(opts.channel);
+    const res = await helix.sendHelixRequest(`clips?broadcaster_id=${channel.id}&started_at=${lastWeek.toISOString()}&ended_at=${now.toISOString()}&first=1`);
+    return res.length > 0 ? res[0].creator_id : null;
   }
 
   return {
