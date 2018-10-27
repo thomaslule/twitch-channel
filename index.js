@@ -67,7 +67,7 @@ module.exports = (options = {}) => {
     const lastWeek = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
     const channel = await helix.getTwitchUserByName(opts.channel);
     const res = await helix.sendHelixRequest(`clips?broadcaster_id=${channel.id}&started_at=${lastWeek.toISOString()}&ended_at=${now.toISOString()}&first=1`);
-    return res.length > 0 ? res[0].creator_id : null;
+    return res.length > 0 ? res[0].creator_id : undefined;
   }
 
   return {
