@@ -13,7 +13,7 @@ const defaultOptions = {
 
 module.exports = (options = {}) => {
   const opts = { ...defaultOptions, ...options };
-  const bus = new EventEmitter();
+  const bus = new EventEmitter().setMaxListeners(100);
   const webhook = Webhook(bus, opts);
   const chatBot = ChatBot(bus, opts);
   const streamlabs = Streamlabs(bus, opts);
