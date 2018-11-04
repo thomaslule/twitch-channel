@@ -8,7 +8,6 @@ const defaultOptions = {
   logger: console,
   port: 80,
   is_test: false,
-  error_handler: (err) => { throw err; },
 };
 
 module.exports = (options = {}) => {
@@ -24,7 +23,7 @@ module.exports = (options = {}) => {
       try {
         await handler(...args);
       } catch (err) {
-        opts.error_handler(err);
+        bus.emit('error', err);
       }
     });
   };
