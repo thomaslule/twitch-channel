@@ -53,7 +53,10 @@ export class TwitchChannel extends EventEmitter {
     const channel = await this.helix.getTwitchUserByName(this.options.channel);
     const path = `clips?broadcaster_id=${channel.id}&started_at=${lastWeek}&ended_at=${now}&first=1`;
     const res = await this.helix.sendHelixRequest(path);
-    return res.length > 0 ? res[0].creator_id : undefined;
+    if (res.length === 0) { return undefined; }
+    const viewerId = res[0].creator_id;
+    const viewerName = res[0].creator_name;
+    return { viewerId, viewerName };
   }
 
 }
