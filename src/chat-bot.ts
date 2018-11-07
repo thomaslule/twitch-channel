@@ -17,16 +17,16 @@ export class ChatBot {
     });
 
     this.bot.on("chat", (channel: string, userstate: any, message: string) => {
-      twitchChannel.emit("chat", { viewerId: userstate["user-id"], viewerName: userstate["display-name"], message });
+      const viewerId = userstate["user-id"];
+      const viewerName = userstate["display-name"];
+      twitchChannel.emit("chat", { viewerId, viewerName, message });
     });
 
     this.bot.on("cheer", (channel: string, userstate: any, message: string) => {
-      twitchChannel.emit("chat", {
-        viewerId: userstate["user-id"],
-        viewerName: userstate["display-name"],
-        amount: userstate.bits,
-        message,
-      });
+      const viewerId = userstate["user-id"];
+      const viewerName = userstate["display-name"];
+      const amount = userstate.bits;
+      twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
     });
 
     this.bot.on("subscription", async (channel: string, username: string, method: any, message: string) => {
