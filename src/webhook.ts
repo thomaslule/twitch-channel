@@ -25,7 +25,9 @@ export class Webhook {
 
     this.webhook.on("users/follows", ({ event }: any) => {
       event.data.forEach((follow: any) => {
-        twitchChannel.emit("follow", { viewerId: follow.from_id, viewerName: follow.from_name });
+        const viewerId = follow.from_id;
+        const viewerName = follow.from_name;
+        twitchChannel.emit("follow", { viewerId, viewerName });
       });
     });
 
