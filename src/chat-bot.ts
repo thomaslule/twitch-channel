@@ -16,7 +16,8 @@ export class ChatBot {
       channels: [`#${this.options.channel}`],
     });
 
-    this.bot.on("chat", (channel: string, userstate: any, message: string) => {
+    this.bot.on("chat", (channel: string, userstate: any, message: string, self: boolean) => {
+      if (self) { return; }
       const viewerId = userstate["user-id"];
       const viewerName = userstate["display-name"];
       twitchChannel.emit("chat", { viewerId, viewerName, message });
