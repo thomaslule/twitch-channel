@@ -32,9 +32,9 @@ export class Streamlabs {
         if (viewer) {
           const viewerId = viewer.id;
           const viewerName = viewer.display_name;
-          this.twitchChannel.emit("donation", { viewerId, viewerName, amount, currency, message });
+          this.twitchChannel.emit("streamlabs/donation", { viewerId, viewerName, amount, currency, message });
         } else {
-          this.twitchChannel.emit("error", `donation: couldnt get the twitch viewer named ${from}`);
+          this.twitchChannel.emit("error", `streamlabs/donation: couldnt get the twitch viewer named ${from}`);
         }
       } else if (event.type === "host") {
         const { name, viewers } = event.message[0];
