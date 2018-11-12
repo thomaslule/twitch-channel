@@ -26,7 +26,11 @@ export class ChatBot {
     this.bot.on("cheer", (channel: string, userstate: any, message: string) => {
       const viewerId = userstate["user-id"];
       const viewerName = userstate["display-name"];
-      const amount = userstate.bits;
+      const amount = parseInt(userstate.bits, 10);
+      if (isNaN(amount)) {
+        twitchChannel.emit("error", `cheer amount was not a number: ${userstate.bits}`);
+        return;
+      }
       twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
     });
 
