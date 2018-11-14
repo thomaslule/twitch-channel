@@ -8,7 +8,7 @@ You just have to provide the config options and make your app reachable from the
 
 The event objects are kept simple and without surprises.
 
-Every viewer-related event will have the twitch id and the current display name in viewerId and viewerName fields.
+Every viewer-related event will have the twitch id and the current display name in `viewerId` and `viewerName` fields.
 
 Streamlabs socket notifications (host and donation) are often sent twice by streamlabs, this library takes care of that.
 
@@ -30,6 +30,10 @@ const channel = new TwitchChannel({
   is_test: false, // set to true to listen to test donations and hosts from streamlabs
 });
 ```
+
+### Why is streamlabs connection required?
+
+I need streamlabs to know when the channel is hosted, I've found no other satisfactory way.
 
 ## Events
 
@@ -67,5 +71,5 @@ await channel.disconnect();
 channel.say("i'm a bot");
 
 // get the twitch user who made the most viewed clip of the week
-const topClipper = await getTopClipper();
+const { viewerId, viewerName } = await getTopClipper();
 ```
