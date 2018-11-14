@@ -2,7 +2,15 @@
 
 A small library to listen to various events that can happen on a twitch channel (chat messages, hosts, donations, raids, subscriptions…)
 
-You just have to provide the config options, this library connects to the chat, subscribes to webhooks, listen to streamlabs socket, it provides a nice abstraction layer for the various twitch APIs.
+You just have to provide the config options and make your app reachable from the internet, this library connects to the chat, subscribes to webhooks, listen to streamlabs socket. It provides a nice abstraction layer for the various twitch APIs.
+
+## The good things
+
+The event objects are kept simple and without surprises.
+
+Every viewer-related event will have the twitch id and the current display name in viewerId and viewerName fields.
+
+Streamlabs socket notifications (host and donation) are often sent twice by streamlabs, this library takes care of that.
 
 ## Initialization
 
@@ -26,6 +34,7 @@ const channel = new TwitchChannel({
 ## Events
 
 ```javascript
+channel.on('debug', msg => console.log(msg));
 channel.on('info', msg => console.log(msg));
 channel.on('error', err => console.error(err));
 
@@ -40,8 +49,12 @@ channel.on('follow', ({ viewerId, viewerName }) => {});
 channel.on('stream-begin', ({ game }) => {});
 channel.on('stream-change-game', ({ game }) => {});
 channel.on('stream-end', () => {});
-channel.on('streamlabs/donation', ({ viewerId, viewerName, amount, currency, message }) => {});
+channel.on('streamlabs/donation', ({ viewerId, viewerName, amount, currency, message }) => {}); // viewerId provided when found from the donator name
 ```
+
+TwichChannel is an `EventEmitter`, you can use all of its methods too.
+
+You **should** set a listener for `error` otherwise it will throw on errors: https://nodejs.org/api/events.html#events_error_events
 
 ## Methods
 
@@ -56,5 +69,3 @@ channel.say("i'm a bot");
 // get the twitch user who made the most viewed clip of the week
 const topClipper = await getTopClipper();
 ```
-
-TwichChannel is an `EventEmitter`, you can use all of its methods too.

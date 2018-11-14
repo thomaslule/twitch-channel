@@ -3,6 +3,7 @@ const options = require('./config');
 
 const channel = new TwitchChannel(options);
 
+channel.on('debug', msg => console.log(msg));
 channel.on('info', msg => console.log(msg));
 channel.on('error', err => console.error(err));
 
