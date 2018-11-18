@@ -30,8 +30,9 @@ export class Streamlabs {
         if (!this.options.is_test && streamlabsMsg.isTest) { return; }
         if (this.isDuplicateMessage(streamlabsMsg)) { return; }
         if (event.type === "donation") {
-          const { amount, currency, message, from } = streamlabsMsg;
+          const { amount, currency, from } = streamlabsMsg;
           const viewer = await this.twitchChannel.getTwitchUserByName(from);
+          const message = streamlabsMsg.message || undefined;
           if (viewer) {
             const viewerId = viewer.id;
             const viewerName = viewer.display_name;

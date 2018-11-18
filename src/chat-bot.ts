@@ -34,24 +34,26 @@ export class ChatBot {
       twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
     });
 
-    this.bot.on("subscription", async (channel: string, username: string, method: any, message: string) => {
+    this.bot.on("subscription", async (channel: string, username: string, method: any, msg: string) => {
       try {
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) { throw new Error(`subscription: couldnt get the twitch viewer named ${username}`); }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
+        const message = msg ? msg : undefined;
         twitchChannel.emit("sub", { viewerId, viewerName, message });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
     });
 
-    this.bot.on("resub", async (channel: string, username: string, months: number, message: string) => {
+    this.bot.on("resub", async (channel: string, username: string, months: number, msg: string) => {
       try {
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) { throw new Error(`resub: couldnt get the twitch viewer named ${username}`); }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
+        const message = msg ? msg : undefined;
         twitchChannel.emit("resub", { viewerId, viewerName, message, months });
       } catch (err) {
         twitchChannel.emit("error", err);
