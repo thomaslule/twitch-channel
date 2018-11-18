@@ -25,14 +25,10 @@ export class Streamlabs {
   private async eventHandler(event: any) {
     try {
       this.twitchChannel.emit("debug", `streamlabs event: ${JSON.stringify(event)}`);
-      if (!Array.isArray(event.message)) { return; }
+      if (event.type !== "donation" && event.type !== "host") { return; }
       await Promise.all(event.message.map(async (streamlabsMsg: any) => {
-        if (!this.options.is_test && streamlabsMsg.isTest) {
-          return;
-        }
-        if (this.isDuplicateMessage(streamlabsMsg)) {
-          return;
-        }
+        if (!this.options.is_test && streamlabsMsg.isTest) { return; }
+        if (this.isDuplicateMessage(streamlabsMsg)) { return; }
         if (event.type === "donation") {
           const { amount, currency, message, from } = streamlabsMsg;
           const viewer = await this.twitchChannel.getTwitchUserByName(from);
