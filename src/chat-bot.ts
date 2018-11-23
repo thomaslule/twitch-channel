@@ -34,34 +34,46 @@ export class ChatBot {
       twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
     });
 
-    this.bot.on("subscription", async (channel: string, username: string, method: any, msg: string) => {
+    this.bot.on(
+      "subscription",
+      async (channel: string, username: string, method: any, msg: string,
+    ) => {
       try {
+        twitchChannel.emit("debug", `subscription method: ${JSON.stringify(method)}`);
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) { throw new Error(`subscription: couldnt get the twitch viewer named ${username}`); }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        twitchChannel.emit("sub", { viewerId, viewerName, message });
+        const prime: boolean = method.prime;
+        const plan = Number(method.plan);
+        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
+        twitchChannel.emit("sub", { viewerId, viewerName, message, prime, tier });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
     });
 
-    this.bot.on("resub", async (channel: string, username: string, months: number, msg: string) => {
+    this.bot.on("resub", async (channel: string, username: string, months: number, msg: string, userstate, method) => {
       try {
+        twitchChannel.emit("debug", `resub method: ${JSON.stringify(method)}`);
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) { throw new Error(`resub: couldnt get the twitch viewer named ${username}`); }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        twitchChannel.emit("resub", { viewerId, viewerName, message, months });
+        const prime: boolean = method.prime;
+        const plan = Number(method.plan);
+        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
+        twitchChannel.emit("resub", { viewerId, viewerName, message, months, prime, tier });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
     });
 
-    this.bot.on("subgift", async (channel: string, username: string, recipient: string) => {
+    this.bot.on("subgift", async (channel: string, username: string, recipient: string, method) => {
       try {
+        twitchChannel.emit("debug", `subgift method: ${JSON.stringify(method)}`);
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) { throw new Error(`subgift: couldnt get the twitch viewer named ${username}`); }
         const viewerId = viewer.id;
@@ -69,7 +81,9 @@ export class ChatBot {
         const recipientUser = await twitchChannel.getTwitchUserByName(recipient);
         if (!viewer) { throw new Error(`subgift: couldnt get the twitch viewer named ${username}`); }
         const recipientId = recipientUser.id;
-        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId });
+        const plan = Number(method.plan);
+        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
+        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId, tier });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
