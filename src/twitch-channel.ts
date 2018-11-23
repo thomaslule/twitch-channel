@@ -9,7 +9,7 @@ export class TwitchChannel extends EventEmitter {
   private options: Options;
   private webhook: Webhook;
   private chatBot: ChatBot;
-  private streamlabs: Streamlabs;
+  private streamlabs?: Streamlabs;
   private helix: any;
 
   constructor(opts: MandatoryOptions & Partial<Options>) {
@@ -17,18 +17,24 @@ export class TwitchChannel extends EventEmitter {
     this.options = getWithDefault(opts);
     this.webhook = new Webhook(this, this.options);
     this.chatBot = new ChatBot(this, this.options);
-    this.streamlabs = new Streamlabs(this, this.options);
+    this.streamlabs = this.options.streamlabs_socket_token
+      ? new Streamlabs(this, this.options)
+      : undefined;
     this.helix = new TwitchHelix({ clientId: this.options.client_id, clientSecret: this.options.client_secret });
   }
 
   public async connect() {
-    this.streamlabs.start();
+    if (this.options.streamlabs_socket_token) {
+      this.streamlabs!.start();
+    }
     await this.chatBot.connect();
     await this.webhook.start();
   }
 
   public async disconnect() {
-    this.streamlabs.stop();
+    if (this.options.streamlabs_socket_token) {
+      this.streamlabs!.stop();
+    }
     await this.chatBot.disconnect();
     await this.webhook.stop();
   }

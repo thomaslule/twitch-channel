@@ -31,9 +31,9 @@ const channel = new TwitchChannel({
 });
 ```
 
-### Why is streamlabs connection required?
+### Why if I don't have streamlabs?
 
-I need streamlabs to know when the channel is hosted, I've found no other satisfactory way.
+Just don't put the `streamlabs_secret_token` option then, sadly you won't catch the "host" event, I found no satisfactory way to catch it without Streamlabs.
 
 ## Events
 

@@ -1,6 +1,7 @@
 const defaultOptions = {
   port: 80,
   is_test: false,
+  streamlabs_socket_token: undefined,
 };
 
 export function getWithDefault(options: MandatoryOptions): Options {
@@ -13,7 +14,6 @@ export interface MandatoryOptions {
   bot_token: string;
   client_id: string;
   client_secret: string;
-  streamlabs_socket_token: string;
   callback_url: string;
   secret: string;
 }
@@ -21,4 +21,5 @@ export interface MandatoryOptions {
 export interface Options extends MandatoryOptions {
   port: number;
   is_test: boolean;
+  streamlabs_socket_token?: string;
 }
