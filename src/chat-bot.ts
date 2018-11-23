@@ -45,7 +45,7 @@ export class ChatBot {
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        const prime: boolean = method.prime;
+        const prime = Boolean(method.prime);
         const plan = Number(method.plan);
         const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
         twitchChannel.emit("sub", { viewerId, viewerName, message, prime, tier });
@@ -62,7 +62,7 @@ export class ChatBot {
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        const prime: boolean = method.prime;
+        const prime = Boolean(method.prime);
         const plan = Number(method.plan);
         const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
         twitchChannel.emit("resub", { viewerId, viewerName, message, months, prime, tier });
