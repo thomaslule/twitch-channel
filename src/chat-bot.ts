@@ -1,12 +1,12 @@
-import * as TwitchJs from "twitch-js";
+import { Client } from "twitch-js";
 import { Options } from "./options";
 import { TwitchChannel } from "./twitch-channel";
 
 export class ChatBot {
-  private bot: any;
+  private bot: Client;
 
   constructor(twitchChannel: TwitchChannel, private options: Options) {
-    this.bot = new TwitchJs.client({
+    this.bot = new Client({
       options: { debug: false },
       connection: { reconnect: true },
       identity: {
