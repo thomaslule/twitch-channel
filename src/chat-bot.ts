@@ -45,10 +45,8 @@ export class ChatBot {
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        const prime = Boolean(method.prime);
-        const plan = Number(method.plan);
-        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
-        twitchChannel.emit("sub", { viewerId, viewerName, message, prime, tier });
+        const plan = method.plan;
+        twitchChannel.emit("sub", { viewerId, viewerName, message, plan });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
@@ -62,10 +60,8 @@ export class ChatBot {
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
-        const prime = Boolean(method.prime);
-        const plan = Number(method.plan);
-        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
-        twitchChannel.emit("resub", { viewerId, viewerName, message, months, prime, tier });
+        const plan = method.plan;
+        twitchChannel.emit("resub", { viewerId, viewerName, message, months, plan });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
@@ -79,11 +75,10 @@ export class ChatBot {
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
         const recipientUser = await twitchChannel.getTwitchUserByName(recipient);
-        if (!viewer) { throw new Error(`subgift: couldnt get the twitch viewer named ${username}`); }
+        if (!recipientUser) { throw new Error(`subgift: couldnt get the twitch viewer named ${username}`); }
         const recipientId = recipientUser.id;
-        const plan = Number(method.plan);
-        const tier = plan === 3000 ? 3 : plan === 2000 ? 2 : 1;
-        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId, tier });
+        const plan = method.plan;
+        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId, plan });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
