@@ -24,7 +24,6 @@ export class Streamlabs {
 
   private async eventHandler(event: any) {
     try {
-      this.twitchChannel.emit("debug", `streamlabs event: ${JSON.stringify(event)}`);
       if (event.type !== "donation" && event.type !== "host") { return; }
       await Promise.all(event.message.map(async (streamlabsMsg: any) => {
         if (!this.options.is_test && streamlabsMsg.isTest) { return; }
