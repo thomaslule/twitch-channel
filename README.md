@@ -47,7 +47,7 @@ channel.on('cheer', ({ viewerId, viewerName, amount, message }) => {});
 // for subs/resubs/subgifts, plan === "1000", "2000", "3000" or "Prime". See msg-param-sub-plan here https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
 channel.on('sub', ({ viewerId, viewerName, message, plan }) => {}); 
 channel.on('resub', ({ viewerId, viewerName, message, months, plan }) => {});
-channel.on('subgift', ({ viewerId, viewerName, recipientId, plan }) => {});
+channel.on('subgift', ({ viewerId, viewerName, recipientId, recipientName, plan }) => {});
 channel.on('host', ({ viewerId, viewerName, viewers }) => {});
 channel.on('raid', ({ viewerId, viewerName, viewers }) => {});
 channel.on('follow', ({ viewerId, viewerName }) => {});

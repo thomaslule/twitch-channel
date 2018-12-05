@@ -77,8 +77,9 @@ export class ChatBot {
         const recipientUser = await twitchChannel.getTwitchUserByName(recipient);
         if (!recipientUser) { throw new Error(`subgift: couldnt get the twitch viewer named ${username}`); }
         const recipientId = recipientUser.id;
+        const recipientName = recipientUser.display_name;
         const plan = method.plan;
-        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId, plan });
+        twitchChannel.emit("subgift", { viewerId, viewerName, recipientId, recipientName, plan });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
