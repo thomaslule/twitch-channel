@@ -29,7 +29,8 @@ export class Streamlabs {
         if (!this.options.is_test && streamlabsMsg.isTest) { return; }
         if (this.isDuplicateMessage(streamlabsMsg)) { return; }
         if (event.type === "donation") {
-          const { amount, currency, from } = streamlabsMsg;
+          const { currency, from } = streamlabsMsg;
+          const amount = parseFloat(streamlabsMsg.amount);
           const viewer = await this.twitchChannel.getTwitchUserByName(from);
           const message = streamlabsMsg.message || undefined;
           if (viewer) {
@@ -41,7 +42,8 @@ export class Streamlabs {
             this.twitchChannel.emit("streamlabs/donation", { viewerName, amount, currency, message });
           }
         } else if (event.type === "host") {
-          const { name, viewers } = streamlabsMsg;
+          const { name } = streamlabsMsg;
+          const viewers = parseInt(streamlabsMsg.viewers, 10);
           const viewer = await this.twitchChannel.getTwitchUserByName(name);
           if (viewer) {
             const viewerId = viewer.id;

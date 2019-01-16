@@ -52,7 +52,7 @@ export class ChatBot {
       }
     });
 
-    this.bot.on("resub", async (channel: string, username: string, months: number, msg: string, userstate, method) => {
+    this.bot.on("resub", async (channel: string, username: string, months: any, msg: string, userstate, method) => {
       try {
         twitchChannel.emit("debug", `resub method: ${JSON.stringify(method)}`);
         const viewer = await twitchChannel.getTwitchUserByName(username);
@@ -61,7 +61,7 @@ export class ChatBot {
         const viewerName = viewer.display_name;
         const message = msg ? msg : undefined;
         const plan = method.plan;
-        twitchChannel.emit("resub", { viewerId, viewerName, message, months, plan });
+        twitchChannel.emit("resub", { viewerId, viewerName, message, months: parseInt(months, 10), plan });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
@@ -91,7 +91,7 @@ export class ChatBot {
         if (!viewer) { throw new Error(`raid: couldnt get the twitch viewer named ${raider}`); }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
-        twitchChannel.emit("raid", { viewerId, viewerName, viewers });
+        twitchChannel.emit("raid", { viewerId, viewerName, viewers: parseInt(viewers, 10) });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
