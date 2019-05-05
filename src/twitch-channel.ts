@@ -20,7 +20,10 @@ export class TwitchChannel extends EventEmitter {
     this.streamlabs = this.options.streamlabs_socket_token
       ? new Streamlabs(this, this.options)
       : undefined;
-    this.helix = new TwitchHelix({ clientId: this.options.client_id, clientSecret: this.options.client_secret });
+    this.helix = new TwitchHelix({
+      clientId: this.options.client_id,
+      clientSecret: this.options.client_secret
+    });
   }
 
   public async connect() {
@@ -55,14 +58,19 @@ export class TwitchChannel extends EventEmitter {
 
   public async getTopClipper() {
     const now = new Date().toISOString();
-    const lastWeek = new Date(new Date().getTime() - (7 * 24 * 60 * 60 * 1000)).toISOString();
+    const lastWeek = new Date(
+      new Date().getTime() - 7 * 24 * 60 * 60 * 1000
+    ).toISOString();
     const channel = await this.helix.getTwitchUserByName(this.options.channel);
-    const path = `clips?broadcaster_id=${channel.id}&started_at=${lastWeek}&ended_at=${now}&first=1`;
+    const path = `clips?broadcaster_id=${
+      channel.id
+    }&started_at=${lastWeek}&ended_at=${now}&first=1`;
     const res = await this.helix.sendHelixRequest(path);
-    if (res.length === 0) { return undefined; }
+    if (res.length === 0) {
+      return undefined;
+    }
     const viewerId = res[0].creator_id;
     const viewerName = res[0].creator_name;
     return { viewerId, viewerName };
   }
-
 }

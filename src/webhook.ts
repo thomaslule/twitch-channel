@@ -12,15 +12,18 @@ export class Webhook {
   private lastGame: string | undefined;
 
   constructor(private twitchChannel: TwitchChannel, private options: Options) {
-    this.helix = new TwitchHelix({ clientId: this.options.client_id, clientSecret: this.options.client_secret });
+    this.helix = new TwitchHelix({
+      clientId: this.options.client_id,
+      clientSecret: this.options.client_secret
+    });
     this.webhook = new TwitchWebhook({
       client_id: this.options.client_id,
       callback: this.options.callback_url,
       secret: this.options.secret,
       lease_seconds: REFRESH_EVERY,
       listen: {
-        autoStart: false,
-      },
+        autoStart: false
+      }
     });
 
     this.webhook.on("users/follows", ({ event }: any) => {
@@ -54,10 +57,10 @@ export class Webhook {
   }
 
   public async start() {
-    const stream = await this.helix.getStreamInfoByUsername(this.options.channel);
-    this.lastGame = stream
-      ? await this.getGameName(stream.game_id)
-      : undefined;
+    const stream = await this.helix.getStreamInfoByUsername(
+      this.options.channel
+    );
+    this.lastGame = stream ? await this.getGameName(stream.game_id) : undefined;
     await this.webhook.listen(this.options.port);
     await this.subscribe();
     this.intervalId = setInterval(() => this.subscribe(), REFRESH_EVERY * 1000);
@@ -74,8 +77,13 @@ export class Webhook {
 
   private async subscribe() {
     try {
-      const channel = await this.helix.getTwitchUserByName(this.options.channel);
-      await this.webhook.subscribe("users/follows", { first: 1, to_id: channel.id });
+      const channel = await this.helix.getTwitchUserByName(
+        this.options.channel
+      );
+      await this.webhook.subscribe("users/follows", {
+        first: 1,
+        to_id: channel.id
+      });
       await this.webhook.subscribe("streams", { user_id: channel.id });
       this.twitchChannel.emit("info", "subscribed to webhooks");
     } catch (err) {

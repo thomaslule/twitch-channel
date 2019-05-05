@@ -15,19 +15,19 @@ Streamlabs socket notifications (host and donation) are often sent twice by stre
 ## Initialization
 
 ```javascript
-const { TwitchChannel } = require('twitch-channel');
+const { TwitchChannel } = require("twitch-channel");
 
 const channel = new TwitchChannel({
-  channel: 'your_channel',
-  bot_name: '', // twitch bot login
-  bot_token: '', // create your token here https://twitchapps.com/tmi/
-  client_id: '', // get it by registering a twitch app https://dev.twitch.tv/dashboard/apps/create (Redirect URI is not used)
-  client_secret: '', // secret of your registered twitch app
-  streamlabs_socket_token: '', // get yours here https://streamlabs.com/dashboard#/apisettings in API TOKENS then "your socket API token"
+  channel: "your_channel",
+  bot_name: "", // twitch bot login
+  bot_token: "", // create your token here https://twitchapps.com/tmi/
+  client_id: "", // get it by registering a twitch app https://dev.twitch.tv/dashboard/apps/create (Redirect URI is not used)
+  client_secret: "", // secret of your registered twitch app
+  streamlabs_socket_token: "", // get yours here https://streamlabs.com/dashboard#/apisettings in API TOKENS then "your socket API token"
   port: 3100, // the lib will listen to this port
-  callback_url: '', // url to your server, accessible from the outside world
-  secret: '', // any random string
-  is_test: false, // set to true to listen to test donations and hosts from streamlabs
+  callback_url: "", // url to your server, accessible from the outside world
+  secret: "", // any random string
+  is_test: false // set to true to listen to test donations and hosts from streamlabs
 });
 ```
 
@@ -38,23 +38,30 @@ Just don't put the `streamlabs_secret_token` option then, sadly you won't catch 
 ## Events
 
 ```javascript
-channel.on('debug', msg => console.log(msg));
-channel.on('info', msg => console.log(msg));
-channel.on('error', err => console.error(err));
+channel.on("debug", msg => console.log(msg));
+channel.on("info", msg => console.log(msg));
+channel.on("error", err => console.error(err));
 
-channel.on('chat', ({ viewerId, viewerName, message }) => {});
-channel.on('cheer', ({ viewerId, viewerName, amount, message }) => {});
+channel.on("chat", ({ viewerId, viewerName, message }) => {});
+channel.on("cheer", ({ viewerId, viewerName, amount, message }) => {});
 // for subs/resubs/subgifts, plan === "1000", "2000", "3000" or "Prime". See msg-param-sub-plan here https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
-channel.on('sub', ({ viewerId, viewerName, message, plan }) => {}); 
-channel.on('resub', ({ viewerId, viewerName, message, months, plan }) => {});
-channel.on('subgift', ({ viewerId, viewerName, recipientId, recipientName, plan }) => {});
-channel.on('host', ({ viewerId, viewerName, viewers }) => {});
-channel.on('raid', ({ viewerId, viewerName, viewers }) => {});
-channel.on('follow', ({ viewerId, viewerName }) => {});
-channel.on('stream-begin', ({ game }) => {});
-channel.on('stream-change-game', ({ game }) => {});
-channel.on('stream-end', () => {});
-channel.on('streamlabs/donation', ({ viewerId, viewerName, amount, currency, message }) => {}); // viewerId provided when found from the donator name
+channel.on("sub", ({ viewerId, viewerName, message, plan }) => {});
+channel.on("resub", ({ viewerId, viewerName, message, months, plan }) => {});
+channel.on(
+  "subgift",
+  ({ viewerId, viewerName, recipientId, recipientName, plan }) => {}
+);
+channel.on("host", ({ viewerId, viewerName, viewers }) => {});
+channel.on("raid", ({ viewerId, viewerName, viewers }) => {});
+channel.on("follow", ({ viewerId, viewerName }) => {});
+channel.on("stream-begin", ({ game }) => {});
+channel.on("stream-change-game", ({ game }) => {});
+channel.on("stream-end", () => {});
+channel.on(
+  "streamlabs/donation",
+  // viewerId provided when found from the donator name
+  ({ viewerId, viewerName, amount, currency, message }) => {}
+);
 ```
 
 TwichChannel is an `EventEmitter`, you can use all of its methods too.

@@ -1,7 +1,7 @@
 const defaultOptions = {
   port: 80,
   is_test: false,
-  streamlabs_socket_token: undefined,
+  streamlabs_socket_token: undefined
 };
 
 export function getWithDefault(options: MandatoryOptions): Options {
