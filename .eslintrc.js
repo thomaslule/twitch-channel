@@ -1,12 +1,17 @@
 module.exports = {
   parser: "@typescript-eslint/parser",
   extends: [
+    "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier/@typescript-eslint"
   ],
   parserOptions: {
     ecmaVersion: 2018,
     sourceType: "module"
+  },
+  env: {
+    node: true,
+    es6: true
   },
   rules: {
     "@typescript-eslint/camelcase": "off",
