@@ -3,6 +3,7 @@ import * as TwitchWebhook from "twitch-webhook";
 import { Options } from "./options";
 import { TwitchChannel } from "./twitch-channel";
 
+// 10 days in seconds, max allowed value
 const REFRESH_EVERY = 864000;
 
 export class Webhook {
