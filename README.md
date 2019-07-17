@@ -31,7 +31,7 @@ const channel = new TwitchChannel({
 });
 ```
 
-### Why if I don't have streamlabs?
+### What if I don't have streamlabs?
 
 Just don't put the `streamlabs_secret_token` option then, sadly you won't catch the "host" event, I found no satisfactory way to catch it without Streamlabs.
 
@@ -51,9 +51,12 @@ channel.on(
   "subgift",
   ({ viewerId, viewerName, recipientId, recipientName, plan }) => {}
 );
+// you need to provide the streamlabs_socket_token option to catch "host" events
 channel.on("host", ({ viewerId, viewerName, viewers }) => {});
 channel.on("raid", ({ viewerId, viewerName, viewers }) => {});
 channel.on("follow", ({ viewerId, viewerName }) => {});
+// you need to make the bot moderator of the channel to catch "ban" events
+channel.on("ban", ({ viewerId, viewerName }) => {});
 channel.on("stream-begin", ({ game }) => {});
 channel.on("stream-change-game", ({ game }) => {});
 channel.on("stream-end", () => {});

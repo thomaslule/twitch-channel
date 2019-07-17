@@ -164,6 +164,22 @@ export class ChatBot {
         twitchChannel.emit("error", err);
       }
     });
+
+    this.bot.on("ban", async (channel: string, username: string) => {
+      try {
+        const viewer = await twitchChannel.getTwitchUserByName(username);
+        if (!viewer) {
+          throw new Error(
+            `ban: couldnt get the twitch viewer named ${username}`
+          );
+        }
+        const viewerId = viewer.id;
+        const viewerName = viewer.display_name;
+        twitchChannel.emit("ban", { viewerId, viewerName });
+      } catch (err) {
+        twitchChannel.emit("error", err);
+      }
+    });
   }
 
   public async connect() {

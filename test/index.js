@@ -43,5 +43,8 @@ channel.on("stream-end", event => {
 channel.on("streamlabs/donation", event => {
   console.log("streamlabs/donation", event);
 });
+channel.on("ban", event => {
+  console.log("ban", event);
+});
 
 channel.connect();
