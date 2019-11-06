@@ -93,6 +93,8 @@ export class Webhook {
   }
 
   private async getGameName(gameId: string) {
-    return (await this.helix.sendHelixRequest(`games?id=${gameId}`))[0].name;
+    const games = await this.helix.sendHelixRequest(`games?id=${gameId}`);
+    // in some cases, twitch doesnt find the game
+    return games.length > 0 ? games[0].name : "";
   }
 }
