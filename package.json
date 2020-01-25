@@ -24,6 +24,7 @@
     "@types/node": "^10.12.2",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
     "@typescript-eslint/parser": "^1.7.0",
+    "@types/socket.io-client": "^1.4.32",
     "eslint": "^5.16.0",
     "eslint-config-prettier": "^4.2.0",
     "prettier": "^1.17.0",
@@ -31,7 +32,6 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "@types/socket.io-client": "^1.4.32",
     "socket.io-client": "^2.1.1",
     "twitch-helix": "^1.0.7",
     "twitch-js": "^1.2.17",
