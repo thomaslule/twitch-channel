@@ -1,4 +1,4 @@
-import { Client } from "twitch-js";
+import { Client } from "tmi.js";
 import { Options } from "./options";
 import { TwitchChannel } from "./twitch-channel";
 
@@ -6,19 +6,19 @@ export class ChatBot {
   private bot: Client;
 
   constructor(twitchChannel: TwitchChannel, private options: Options) {
-    this.bot = new Client({
+    this.bot = Client({
       options: { debug: false },
       connection: { reconnect: true },
       identity: {
         username: this.options.bot_name,
         password: this.options.bot_token
       },
-      channels: [`#${this.options.channel}`]
+      channels: [this.options.channel]
     });
 
     this.bot.on(
       "chat",
-      (channel: string, userstate: any, message: string, self: boolean) => {
+      (channel, userstate, message, self) => {
         if (self) {
           return;
         }
@@ -28,10 +28,10 @@ export class ChatBot {
       }
     );
 
-    this.bot.on("cheer", (channel: string, userstate: any, message: string) => {
+    this.bot.on("cheer", (channel, userstate, message) => {
       const viewerId = userstate["user-id"];
       const viewerName = userstate["display-name"];
-      const amount = parseInt(userstate.bits, 10);
+      const amount = parseInt(userstate.bits!, 10);
       if (isNaN(amount)) {
         twitchChannel.emit(
           "error",
@@ -44,12 +44,8 @@ export class ChatBot {
 
     this.bot.on(
       "subscription",
-      async (channel: string, username: string, method: any, msg: string) => {
+      async (channel, username, method, msg) => {
         try {
-          twitchChannel.emit(
-            "debug",
-            `subscription method: ${JSON.stringify(method)}`
-          );
           const viewer = await twitchChannel.getTwitchUserByName(username);
           if (!viewer) {
             throw new Error(
@@ -70,18 +66,14 @@ export class ChatBot {
     this.bot.on(
       "resub",
       async (
-        channel: string,
-        username: string,
-        months: any,
-        msg: string,
+        channel,
+        username,
+        months,
+        msg,
         userstate,
         method
       ) => {
         try {
-          twitchChannel.emit(
-            "debug",
-            `resub method: ${JSON.stringify(method)}`
-          );
           const viewer = await twitchChannel.getTwitchUserByName(username);
           if (!viewer) {
             throw new Error(
@@ -96,7 +88,7 @@ export class ChatBot {
             viewerId,
             viewerName,
             message,
-            months: parseInt(months, 10),
+            months,
             plan
           });
         } catch (err) {
@@ -107,12 +99,8 @@ export class ChatBot {
 
     this.bot.on(
       "subgift",
-      async (channel: string, username: string, recipient: string, method) => {
+      async (channel, username, streakMonths, recipient, method) => {
         try {
-          twitchChannel.emit(
-            "debug",
-            `subgift method: ${JSON.stringify(method)}`
-          );
           const viewer = await twitchChannel.getTwitchUserByName(username);
           if (!viewer) {
             throw new Error(
@@ -145,7 +133,7 @@ export class ChatBot {
       }
     );
 
-    this.bot.on("raid", async ({ raider, viewers }: any) => {
+    this.bot.on("raided", async (channel, raider, viewers) => {
       try {
         const viewer = await twitchChannel.getTwitchUserByName(raider);
         if (!viewer) {
@@ -158,14 +146,14 @@ export class ChatBot {
         twitchChannel.emit("raid", {
           viewerId,
           viewerName,
-          viewers: parseInt(viewers, 10)
+          viewers
         });
       } catch (err) {
         twitchChannel.emit("error", err);
       }
     });
 
-    this.bot.on("ban", async (channel: string, username: string) => {
+    this.bot.on("ban", async (channel, username) => {
       try {
         const viewer = await twitchChannel.getTwitchUserByName(username);
         if (!viewer) {
