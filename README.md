@@ -45,11 +45,11 @@ channel.on("error", err => console.error(err));
 channel.on("chat", ({ viewerId, viewerName, message }) => {});
 channel.on("cheer", ({ viewerId, viewerName, amount, message }) => {});
 // for subs/resubs/subgifts, plan === "1000", "2000", "3000" or "Prime". See msg-param-sub-plan here https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
-channel.on("sub", ({ viewerId, viewerName, message, plan }) => {});
-channel.on("resub", ({ viewerId, viewerName, message, months, plan }) => {});
+channel.on("sub", ({ viewerId, viewerName, message, plan, planName }) => {});
+channel.on("resub", ({ viewerId, viewerName, message, months, plan, planName }) => {});
 channel.on(
   "subgift",
-  ({ viewerId, viewerName, recipientId, recipientName, plan }) => {}
+  ({ viewerId, viewerName, recipientId, recipientName, plan, planName }) => {}
 );
 // you need to provide the streamlabs_socket_token option to catch "host" events
 channel.on("host", ({ viewerId, viewerName, viewers }) => {});

@@ -55,8 +55,8 @@ export class ChatBot {
           const viewerId = viewer.id;
           const viewerName = viewer.display_name;
           const message = msg ? msg : undefined;
-          const plan = method.plan;
-          twitchChannel.emit("sub", { viewerId, viewerName, message, plan });
+          const { plan, planName } = method;
+          twitchChannel.emit("sub", { viewerId, viewerName, message, plan, planName });
         } catch (err) {
           twitchChannel.emit("error", err);
         }
@@ -83,13 +83,14 @@ export class ChatBot {
           const viewerId = viewer.id;
           const viewerName = viewer.display_name;
           const message = msg ? msg : undefined;
-          const plan = method.plan;
+          const { plan, planName } = method;
           twitchChannel.emit("resub", {
             viewerId,
             viewerName,
             message,
             months,
-            plan
+            plan,
+            planName
           });
         } catch (err) {
           twitchChannel.emit("error", err);
@@ -119,13 +120,14 @@ export class ChatBot {
           }
           const recipientId = recipientUser.id;
           const recipientName = recipientUser.display_name;
-          const plan = method.plan;
+          const { plan, planName } = method;
           twitchChannel.emit("subgift", {
             viewerId,
             viewerName,
             recipientId,
             recipientName,
-            plan
+            plan,
+            planName
           });
         } catch (err) {
           twitchChannel.emit("error", err);
