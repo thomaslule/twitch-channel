@@ -68,7 +68,7 @@ export class ChatBot {
       async (
         channel,
         username,
-        months,
+        monthsDeprecated,
         msg,
         userstate,
         method
@@ -84,11 +84,12 @@ export class ChatBot {
           const viewerName = viewer.display_name;
           const message = msg ? msg : undefined;
           const { plan, planName } = method;
+          const months = Number.parseInt(userstate["msg-param-cumulative-months"] as string, 10)
           twitchChannel.emit("resub", {
             viewerId,
             viewerName,
             message,
-            months,
+            months: Number.isNaN(months) ? undefined : months,
             plan,
             planName
           });
@@ -100,7 +101,7 @@ export class ChatBot {
 
     this.bot.on(
       "subgift",
-      async (channel, username, streakMonths, recipient, method) => {
+      async (channel, username, monthsDeprecated, recipient, method) => {
         try {
           const viewer = await twitchChannel.getTwitchUserByName(username);
           if (!viewer) {
