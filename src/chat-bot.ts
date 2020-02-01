@@ -16,17 +16,14 @@ export class ChatBot {
       channels: [this.options.channel]
     });
 
-    this.bot.on(
-      "chat",
-      (channel, userstate, message, self) => {
-        if (self) {
-          return;
-        }
-        const viewerId = userstate["user-id"];
-        const viewerName = userstate["display-name"];
-        twitchChannel.emit("chat", { viewerId, viewerName, message });
+    this.bot.on("chat", (channel, userstate, message, self) => {
+      if (self) {
+        return;
       }
-    );
+      const viewerId = userstate["user-id"];
+      const viewerName = userstate["display-name"];
+      twitchChannel.emit("chat", { viewerId, viewerName, message });
+    });
 
     this.bot.on("cheer", (channel, userstate, message) => {
       const viewerId = userstate["user-id"];
@@ -42,37 +39,33 @@ export class ChatBot {
       twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
     });
 
-    this.bot.on(
-      "subscription",
-      async (channel, username, method, msg) => {
-        try {
-          const viewer = await twitchChannel.getTwitchUserByName(username);
-          if (!viewer) {
-            throw new Error(
-              `subscription: couldnt get the twitch viewer named ${username}`
-            );
-          }
-          const viewerId = viewer.id;
-          const viewerName = viewer.display_name;
-          const message = msg ? msg : undefined;
-          const { plan, planName } = method;
-          twitchChannel.emit("sub", { viewerId, viewerName, message, plan, planName });
-        } catch (err) {
-          twitchChannel.emit("error", err);
+    this.bot.on("subscription", async (channel, username, method, msg) => {
+      try {
+        const viewer = await twitchChannel.getTwitchUserByName(username);
+        if (!viewer) {
+          throw new Error(
+            `subscription: couldnt get the twitch viewer named ${username}`
+          );
         }
+        const viewerId = viewer.id;
+        const viewerName = viewer.display_name;
+        const message = msg ? msg : undefined;
+        const { plan, planName } = method;
+        twitchChannel.emit("sub", {
+          viewerId,
+          viewerName,
+          message,
+          plan,
+          planName
+        });
+      } catch (err) {
+        twitchChannel.emit("error", err);
       }
-    );
+    });
 
     this.bot.on(
       "resub",
-      async (
-        channel,
-        username,
-        monthsDeprecated,
-        msg,
-        userstate,
-        method
-      ) => {
+      async (channel, username, monthsDeprecated, msg, userstate, method) => {
         try {
           const viewer = await twitchChannel.getTwitchUserByName(username);
           if (!viewer) {
@@ -84,7 +77,10 @@ export class ChatBot {
           const viewerName = viewer.display_name;
           const message = msg ? msg : undefined;
           const { plan, planName } = method;
-          const months = Number.parseInt(userstate["msg-param-cumulative-months"] as string, 10)
+          const months = Number.parseInt(
+            userstate["msg-param-cumulative-months"] as string,
+            10
+          );
           twitchChannel.emit("resub", {
             viewerId,
             viewerName,
@@ -136,7 +132,7 @@ export class ChatBot {
       }
     );
 
-    this.bot.on("raided", async (channel, raider, viewers) => {
+    this.bot.on("raided", async (channel, raider, viewersString: any) => {
       try {
         const viewer = await twitchChannel.getTwitchUserByName(raider);
         if (!viewer) {
@@ -146,6 +142,8 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.display_name;
+        // viewers var is typed as number by the lib but it comes as a string
+        const viewers = Number.parseInt(viewersString, 10);
         twitchChannel.emit("raid", {
           viewerId,
           viewerName,
