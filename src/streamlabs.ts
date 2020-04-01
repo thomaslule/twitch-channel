@@ -47,7 +47,7 @@ export class Streamlabs {
             const message = streamlabsMsg.message || undefined;
             if (viewer) {
               const viewerId = viewer.id;
-              const viewerName = viewer.display_name;
+              const viewerName = viewer.displayName;
               this.twitchChannel.emit("streamlabs/donation", {
                 viewerId,
                 viewerName,
@@ -70,7 +70,7 @@ export class Streamlabs {
             const viewer = await this.twitchChannel.getTwitchUserByName(name);
             if (viewer) {
               const viewerId = viewer.id;
-              const viewerName = viewer.display_name;
+              const viewerName = viewer.displayName;
               this.twitchChannel.emit("host", {
                 viewerId,
                 viewerName,

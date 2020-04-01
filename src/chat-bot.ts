@@ -48,7 +48,7 @@ export class ChatBot {
           );
         }
         const viewerId = viewer.id;
-        const viewerName = viewer.display_name;
+        const viewerName = viewer.displayName;
         const message = msg ? msg : undefined;
         const { plan, planName } = method;
         twitchChannel.emit("sub", {
@@ -74,7 +74,7 @@ export class ChatBot {
             );
           }
           const viewerId = viewer.id;
-          const viewerName = viewer.display_name;
+          const viewerName = viewer.displayName;
           const message = msg ? msg : undefined;
           const { plan, planName } = method;
           const months = Number.parseInt(
@@ -106,7 +106,7 @@ export class ChatBot {
             );
           }
           const viewerId = viewer.id;
-          const viewerName = viewer.display_name;
+          const viewerName = viewer.displayName;
           const recipientUser = await twitchChannel.getTwitchUserByName(
             recipient
           );
@@ -116,7 +116,7 @@ export class ChatBot {
             );
           }
           const recipientId = recipientUser.id;
-          const recipientName = recipientUser.display_name;
+          const recipientName = recipientUser.displayName;
           const { plan, planName } = method;
           twitchChannel.emit("subgift", {
             viewerId,
@@ -141,7 +141,7 @@ export class ChatBot {
           );
         }
         const viewerId = viewer.id;
-        const viewerName = viewer.display_name;
+        const viewerName = viewer.displayName;
         // viewers var is typed as number by the lib but it comes as a string
         const viewers = Number.parseInt(viewersString, 10);
         twitchChannel.emit("raid", {
@@ -163,7 +163,7 @@ export class ChatBot {
           );
         }
         const viewerId = viewer.id;
-        const viewerName = viewer.display_name;
+        const viewerName = viewer.displayName;
         twitchChannel.emit("ban", { viewerId, viewerName });
       } catch (err) {
         twitchChannel.emit("error", err);

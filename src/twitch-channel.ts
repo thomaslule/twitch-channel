@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as TwitchHelix from "twitch-helix";
+import TwitchClient from "twitch";
 import { ChatBot } from "./chat-bot";
 import { getWithDefault, MandatoryOptions, Options } from "./options";
 import { Streamlabs } from "./streamlabs";
@@ -10,7 +10,7 @@ export class TwitchChannel extends EventEmitter {
   private webhook: Webhook;
   private chatBot: ChatBot;
   private streamlabs?: Streamlabs;
-  private helix: any;
+  private twitchClient: TwitchClient;
 
   constructor(opts: MandatoryOptions & Partial<Options>) {
     super();
@@ -20,10 +20,10 @@ export class TwitchChannel extends EventEmitter {
     this.streamlabs = this.options.streamlabs_socket_token
       ? new Streamlabs(this, this.options)
       : undefined;
-    this.helix = new TwitchHelix({
-      clientId: this.options.client_id,
-      clientSecret: this.options.client_secret
-    });
+    this.twitchClient = TwitchClient.withClientCredentials(
+      this.options.client_id,
+      this.options.client_secret
+    );
   }
 
   public on(event: "debug", handler: (param: string) => void): this;
@@ -153,7 +153,7 @@ export class TwitchChannel extends EventEmitter {
       .toLowerCase()
       .replace(/ /g, "_")
       .replace(/[^a-z0-9_]/g, "");
-    const twitchUser = await this.helix.getTwitchUserByName(login);
+    const twitchUser = await this.twitchClient.helix.users.getUserByName(login);
     return twitchUser ? twitchUser : undefined;
   }
 
@@ -162,16 +162,19 @@ export class TwitchChannel extends EventEmitter {
     const lastWeek = new Date(
       new Date().getTime() - 7 * 24 * 60 * 60 * 1000
     ).toISOString();
-    const channel = await this.helix.getTwitchUserByName(this.options.channel);
-    const path = `clips?broadcaster_id=${
-      channel.id
-    }&started_at=${lastWeek}&ended_at=${now}&first=1`;
-    const res = await this.helix.sendHelixRequest(path);
-    if (res.length === 0) {
+    const channel = await this.getTwitchUserByName(this.options.channel);
+    if (channel === undefined) {
+      throw new Error(`channel ${this.options.channel} in options not found`);
+    }
+    const res = await this.twitchClient.helix.clips.getClipsForBroadcaster(
+      channel.id,
+      { startDate: lastWeek, endDate: now }
+    );
+    if (res.data.length === 0) {
       return undefined;
     }
-    const viewerId = res[0].creator_id;
-    const viewerName = res[0].creator_name;
+    const viewerId = res.data[0].creatorId;
+    const viewerName = res.data[0].creatorDisplayName;
     return { viewerId, viewerName };
   }
 }

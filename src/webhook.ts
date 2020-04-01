@@ -1,91 +1,79 @@
-import * as TwitchHelix from "twitch-helix";
-import * as TwitchWebhook from "twitch-webhook";
+import TwitchClient from "twitch";
+import TwitchWebhook, {
+  FollowsFromUserSubscription,
+  StreamChangeSubscription
+} from "twitch-webhooks";
 import { Options } from "./options";
 import { TwitchChannel } from "./twitch-channel";
 
-// 10 days in seconds, max allowed value
-const REFRESH_EVERY = 864000;
-
 export class Webhook {
-  private helix: any;
-  private webhook: any;
-  private intervalId: NodeJS.Timeout | undefined;
+  private twitchClient: TwitchClient;
+  private webhook?: TwitchWebhook;
   private lastGame: string | undefined;
+  private followSubscription?: FollowsFromUserSubscription;
+  private streamSubscription?: StreamChangeSubscription;
 
   constructor(private twitchChannel: TwitchChannel, private options: Options) {
-    this.helix = new TwitchHelix({
-      clientId: this.options.client_id,
-      clientSecret: this.options.client_secret
-    });
-    this.webhook = new TwitchWebhook({
-      client_id: this.options.client_id,
-      callback: this.options.callback_url,
-      secret: this.options.secret,
-      lease_seconds: REFRESH_EVERY,
-      listen: {
-        autoStart: false
-      }
-    });
-
-    this.webhook.on("users/follows", ({ event }: any) => {
-      event.data.forEach((follow: any) => {
-        const viewerId = follow.from_id;
-        const viewerName = follow.from_name;
-        twitchChannel.emit("follow", { viewerId, viewerName });
-      });
-    });
-
-    this.webhook.on("streams", async ({ event }: any) => {
-      try {
-        if (event.data.length === 0) {
-          if (this.lastGame !== undefined) {
-            twitchChannel.emit("stream-end", {});
-            this.lastGame = undefined;
-          }
-        } else {
-          const game = await this.getGameName(event.data[0].game_id);
-          if (this.lastGame === undefined) {
-            twitchChannel.emit("stream-begin", { game });
-          } else if (game !== this.lastGame) {
-            twitchChannel.emit("stream-change-game", { game });
-          }
-          this.lastGame = game;
-        }
-      } catch (err) {
-        this.twitchChannel.emit("error", err);
-      }
-    });
+    this.twitchClient = TwitchClient.withClientCredentials(
+      this.options.client_id,
+      this.options.client_secret
+    );
   }
 
   public async start() {
-    const stream = await this.helix.getStreamInfoByUsername(
+    const stream = await this.twitchClient.helix.streams.getStreamByUserName(
       this.options.channel
     );
-    this.lastGame = stream ? await this.getGameName(stream.game_id) : undefined;
-    await this.webhook.listen(this.options.port);
+    this.lastGame = stream ? await this.getGameName(stream.gameId) : undefined;
+    this.webhook = await TwitchWebhook.create(
+      this.twitchClient,
+      this.getCallbackProperties()
+    );
+    this.webhook.listen();
     await this.subscribe();
-    this.intervalId = setInterval(() => this.subscribe(), REFRESH_EVERY * 1000);
   }
 
   public async stop() {
-    if (this.intervalId) {
-      await this.webhook.unsubscribe("*");
-      this.twitchChannel.emit("info", "unsubscribed from webhooks");
-      await this.webhook.close();
-      clearInterval(this.intervalId);
+    if (this.webhook) {
+      this.webhook.unlisten();
+      await this.followSubscription!.stop();
+      await this.streamSubscription!.stop();
     }
   }
 
   private async subscribe() {
     try {
-      const channel = await this.helix.getTwitchUserByName(
+      const channel = await this.twitchClient.helix.users.getUserByName(
         this.options.channel
       );
-      await this.webhook.subscribe("users/follows", {
-        first: 1,
-        to_id: channel.id
+      if (!channel) {
+        throw new Error(`channel ${this.options.channel} in options not found`);
+      }
+      await this.webhook!.subscribeToFollowsToUser(channel.id, follow => {
+        const viewerId = follow.userId;
+        const viewerName = follow.userDisplayName;
+        this.twitchChannel.emit("follow", { viewerId, viewerName });
       });
-      await this.webhook.subscribe("streams", { user_id: channel.id });
+      await this.webhook!.subscribeToStreamChanges(channel.id, async stream => {
+        try {
+          if (!stream) {
+            if (this.lastGame !== undefined) {
+              this.twitchChannel.emit("stream-end", {});
+              this.lastGame = undefined;
+            }
+          } else {
+            const game = await this.getGameName(stream.gameId);
+            if (this.lastGame === undefined) {
+              this.twitchChannel.emit("stream-begin", { game });
+            } else if (game !== this.lastGame) {
+              this.twitchChannel.emit("stream-change-game", { game });
+            }
+            this.lastGame = game;
+          }
+        } catch (err) {
+          this.twitchChannel.emit("error", err);
+        }
+      });
       this.twitchChannel.emit("info", "subscribed to webhooks");
     } catch (err) {
       this.twitchChannel.emit("error", err);
@@ -93,8 +81,36 @@ export class Webhook {
   }
 
   private async getGameName(gameId: string) {
-    const games = await this.helix.sendHelixRequest(`games?id=${gameId}`);
+    const game = await this.twitchClient.helix.games.getGameById(gameId);
     // in some cases, twitch doesnt find the game
-    return games.length > 0 ? games[0].name : "";
+    return game ? game.name : "";
+  }
+
+  private getCallbackProperties() {
+    const urlRegex = this.options.callback_url.match(
+      /^(https?):\/\/([^/:]*)(:[0-9]+)?(\/.*)?$/
+    );
+    if (!urlRegex) {
+      throw new Error(`Invalid callback url: ${this.options.callback_url}`);
+    }
+    const ssl = urlRegex[1] === "https";
+    const hostName = urlRegex[2];
+    const port = urlRegex[3]
+      ? parseInt(urlRegex[3].substring(1), 10)
+      : undefined;
+    const pathPrefix = urlRegex[4] === "/" ? undefined : urlRegex[4];
+    const behindProxy = ssl || pathPrefix || port !== this.options.port;
+    const reverseProxy = behindProxy
+      ? {
+          ssl,
+          pathPrefix,
+          port: port ? port : ssl ? 443 : 80
+        }
+      : undefined;
+    return {
+      port: this.options.port,
+      hostName,
+      reverseProxy
+    };
   }
 }
