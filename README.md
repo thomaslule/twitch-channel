@@ -126,3 +126,9 @@ channel.say("i'm a bot");
 // get the twitch user who made the most viewed clip of the week
 const { viewerId, viewerName } = await getTopClipper();
 ```
+
+## Upgrade from v0 to v1
+
+- streamlabs support has been dropped
+- now to catch the "host" event, you must provide the broadcaster_bot_token config
+- the "host" event is now also fired with auto-hosts, it has a new "autohost" boolean property
