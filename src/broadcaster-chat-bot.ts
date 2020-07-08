@@ -1,6 +1,7 @@
 import { Client } from "tmi.js";
 import { Config } from "./config";
 import { getTwitchUserByName } from "./get-twitch-user-by-name";
+import { log } from "./log";
 import { TwitchChannel } from "./twitch-channel";
 
 export class BroadcasterChatBot {
@@ -39,11 +40,11 @@ export class BroadcasterChatBot {
             autohost,
           });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a host event",
-            error,
-          });
+          log.error(
+            twitchChannel,
+            "an error happened during a host event",
+            error
+          );
         }
       });
     }
@@ -56,10 +57,10 @@ export class BroadcasterChatBot {
       this.bot.readyState() !== "OPEN"
     ) {
       await this.bot.connect();
-      this.twitchChannel.emit("log", {
-        level: "info",
-        message: "connected to the IRC chat with the broadcaster account",
-      });
+      log.info(
+        this.twitchChannel,
+        "connected to the IRC chat with the broadcaster account"
+      );
     }
   }
 

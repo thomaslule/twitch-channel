@@ -7,6 +7,7 @@ import {
   MandatoryConfig,
   OptionalConfig,
 } from "./config";
+import { log } from "./log";
 import { Webhook } from "./webhook";
 
 export class TwitchChannel extends EventEmitter {
@@ -18,11 +19,7 @@ export class TwitchChannel extends EventEmitter {
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
     super();
     this.on("error", (error) => {
-      this.emit("log", {
-        level: "error",
-        message: "an uncaught error happened in a listener",
-        error,
-      });
+      log.error(this, "an uncaught error happened in a listener", error);
     });
     this.config = getWithDefault(opts);
     this.webhook = new Webhook(this, this.config);

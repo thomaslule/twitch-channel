@@ -1,6 +1,7 @@
 import { Client } from "tmi.js";
 import { Config } from "./config";
 import { getTwitchUserByName } from "./get-twitch-user-by-name";
+import { log } from "./log";
 import { TwitchChannel } from "./twitch-channel";
 
 export class ChatBot {
@@ -32,11 +33,11 @@ export class ChatBot {
           const viewerName = userstate["display-name"];
           twitchChannel.emit("chat", { viewerId, viewerName, message });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a chat event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a chat event",
+            error
+          );
         }
       });
 
@@ -55,11 +56,11 @@ export class ChatBot {
             message,
           });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a cheer event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a cheer event",
+            error
+          );
         }
       });
 
@@ -83,11 +84,11 @@ export class ChatBot {
             planName,
           });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a subscription event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a subscription event",
+            error
+          );
         }
       });
 
@@ -118,11 +119,11 @@ export class ChatBot {
               planName,
             });
           } catch (error) {
-            twitchChannel.emit("log", {
-              level: "error",
-              message: "an error happened during a resub event",
-              error,
-            });
+            log.error(
+              this.twitchChannel,
+              "an error happened during a resub event",
+              error
+            );
           }
         }
       );
@@ -160,11 +161,11 @@ export class ChatBot {
               planName,
             });
           } catch (error) {
-            twitchChannel.emit("log", {
-              level: "error",
-              message: "an error happened during a subgift event",
-              error,
-            });
+            log.error(
+              this.twitchChannel,
+              "an error happened during a subgift event",
+              error
+            );
           }
         }
       );
@@ -187,11 +188,11 @@ export class ChatBot {
             viewers,
           });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a raided event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a raided event",
+            error
+          );
         }
       });
 
@@ -207,11 +208,11 @@ export class ChatBot {
           const viewerName = viewer.displayName;
           twitchChannel.emit("ban", { viewerId, viewerName });
         } catch (error) {
-          twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a ban event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a ban event",
+            error
+          );
         }
       });
     }
@@ -224,10 +225,10 @@ export class ChatBot {
       this.bot.readyState() !== "OPEN"
     ) {
       await this.bot.connect();
-      this.twitchChannel.emit("log", {
-        level: "info",
-        message: "connected to the IRC chat with the bot account",
-      });
+      log.info(
+        this.twitchChannel,
+        "connected to the IRC chat with the bot account"
+      );
     }
   }
 

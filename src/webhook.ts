@@ -4,6 +4,7 @@ import TwitchWebhook, {
   StreamChangeSubscription,
 } from "twitch-webhooks";
 import { Config } from "./config";
+import { log } from "./log";
 import { TwitchChannel } from "./twitch-channel";
 
 export class Webhook {
@@ -65,11 +66,11 @@ export class Webhook {
           const viewerName = follow.userDisplayName;
           this.twitchChannel.emit("follow", { viewerId, viewerName });
         } catch (error) {
-          this.twitchChannel.emit("log", {
-            level: "error",
-            message: "an error happened during a follow event",
-            error,
-          });
+          log.error(
+            this.twitchChannel,
+            "an error happened during a follow event",
+            error
+          );
         }
       });
       await this.webhook!.subscribeToStreamChanges(
@@ -91,24 +92,21 @@ export class Webhook {
               this.lastGame = game;
             }
           } catch (error) {
-            this.twitchChannel.emit("log", {
-              level: "error",
-              message: "an error happened during a stream change event",
-              error,
-            });
+            log.error(
+              this.twitchChannel,
+              "an error happened during a stream change event",
+              error
+            );
           }
         }
       );
-      this.twitchChannel.emit("log", {
-        level: "info",
-        message: "subscribed to webhooks",
-      });
+      log.info(this.twitchChannel, "subscribed to webhooks");
     } catch (error) {
-      this.twitchChannel.emit("log", {
-        level: "error",
-        message: "an error happened during the webhook subscription",
-        error,
-      });
+      log.error(
+        this.twitchChannel,
+        "an error happened during the webhook subscription",
+        error
+      );
     }
   }
 
