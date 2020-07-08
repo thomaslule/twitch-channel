@@ -22,6 +22,17 @@ export class ChatBot {
           password: this.config.bot_token,
         },
         channels: [this.config.channel],
+        logger: {
+          info: (message) => {
+            log.debug(twitchChannel, `IRC bot: ${message}`);
+          },
+          warn: (message) => {
+            log.warn(twitchChannel, `IRC bot: ${message}`);
+          },
+          error: (message) => {
+            log.error(twitchChannel, `IRC bot: ${message}`);
+          },
+        },
       });
 
       this.bot.on("chat", (channel, userstate, message, self) => {

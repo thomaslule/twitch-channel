@@ -21,6 +21,17 @@ export class BroadcasterChatBot {
           password: this.config.broadcaster_bot_token,
         },
         channels: [this.config.channel],
+        logger: {
+          info: (message) => {
+            log.debug(twitchChannel, `IRC broadcaster bot: ${message}`);
+          },
+          warn: (message) => {
+            log.warn(twitchChannel, `IRC broadcaster bot: ${message}`);
+          },
+          error: (message) => {
+            log.error(twitchChannel, `IRC broadcaster bot: ${message}`);
+          },
+        },
       });
 
       this.bot.on("hosted", async (channel, username, viewers, autohost) => {

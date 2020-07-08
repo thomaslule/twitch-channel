@@ -22,7 +22,7 @@ export const log = {
     });
   },
 
-  error(eventEmitter: EventEmitter, message: string, error: unknown) {
+  error(eventEmitter: EventEmitter, message: string, error?: unknown) {
     eventEmitter.emit("log", {
       level: "error",
       message,
