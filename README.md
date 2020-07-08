@@ -119,16 +119,11 @@ You **should** set a listener for `error` otherwise it will throw on errors: htt
 await channel.connect();
 
 await channel.disconnect();
-
-// send a message in chat from the bot account
-channel.say("i'm a bot");
-
-// get the twitch user who made the most viewed clip of the week
-const { viewerId, viewerName } = await getTopClipper();
 ```
 
 ## Upgrade from v0 to v1
 
-- streamlabs support has been dropped
-- now to catch the "host" event, you must provide the broadcaster_bot_token config
-- the "host" event is now also fired with auto-hosts, it has a new "autohost" boolean property
+- we dont use streamlabs anymore, the `streamlabs/donation` event wont fire and the `streamlabs_socket_token` and `is_test` properties have been removed
+- to catch the `host` event, you must now provide the `broadcaster_bot_token` config
+- the `host` event is now also fired with auto-hosts, it has a new `autohost` boolean property
+- the `say` and `getTopClipper` functions have been removed

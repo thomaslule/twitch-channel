@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import TwitchClient from "twitch";
 import { BroadcasterChatBot } from "./broadcaster-chat-bot";
 import { ChatBot } from "./chat-bot";
 import {
@@ -15,7 +14,6 @@ export class TwitchChannel extends EventEmitter {
   private webhook: Webhook;
   private chatBot: ChatBot;
   private broadcasterChatBot: BroadcasterChatBot;
-  private twitchClient: TwitchClient;
 
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
     super();
@@ -23,10 +21,6 @@ export class TwitchChannel extends EventEmitter {
     this.webhook = new Webhook(this, this.config);
     this.chatBot = new ChatBot(this, this.config);
     this.broadcasterChatBot = new BroadcasterChatBot(this, this.config);
-    this.twitchClient = TwitchClient.withClientCredentials(
-      this.config.client_id,
-      this.config.client_secret
-    );
   }
 
   public on(event: "debug", handler: (param: string) => void): this;
@@ -131,40 +125,5 @@ export class TwitchChannel extends EventEmitter {
     await this.chatBot.disconnect();
     await this.broadcasterChatBot.disconnect();
     await this.webhook.stop();
-  }
-
-  public say(message: string) {
-    this.chatBot.say(message);
-  }
-
-  public async getTwitchUserByName(name: string) {
-    const login = name
-      .normalize("NFD") // split accented characters : è => e`
-      .toLowerCase()
-      .replace(/ /g, "_")
-      .replace(/[^a-z0-9_]/g, "");
-    const twitchUser = await this.twitchClient.helix.users.getUserByName(login);
-    return twitchUser ? twitchUser : undefined;
-  }
-
-  public async getTopClipper() {
-    const now = new Date().toISOString();
-    const lastWeek = new Date(
-      new Date().getTime() - 7 * 24 * 60 * 60 * 1000
-    ).toISOString();
-    const channel = await this.getTwitchUserByName(this.config.channel);
-    if (channel === undefined) {
-      throw new Error(`channel ${this.config.channel} not found`);
-    }
-    const res = await this.twitchClient.helix.clips.getClipsForBroadcaster(
-      channel.id,
-      { startDate: lastWeek, endDate: now }
-    );
-    if (res.data.length === 0) {
-      return undefined;
-    }
-    const viewerId = res.data[0].creatorId;
-    const viewerName = res.data[0].creatorDisplayName;
-    return { viewerId, viewerName };
   }
 }

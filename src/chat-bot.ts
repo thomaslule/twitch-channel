@@ -1,5 +1,6 @@
 import { Client } from "tmi.js";
 import { Config } from "./config";
+import { getTwitchUserByName } from "./get-twitch-user-by-name";
 import { TwitchChannel } from "./twitch-channel";
 
 export class ChatBot {
@@ -47,7 +48,7 @@ export class ChatBot {
 
       this.bot.on("subscription", async (channel, username, method, msg) => {
         try {
-          const viewer = await twitchChannel.getTwitchUserByName(username);
+          const viewer = await getTwitchUserByName(this.config, username);
           if (!viewer) {
             throw new Error(
               `subscription: couldnt get the twitch viewer named ${username}`
@@ -73,7 +74,7 @@ export class ChatBot {
         "resub",
         async (channel, username, monthsDeprecated, msg, userstate, method) => {
           try {
-            const viewer = await twitchChannel.getTwitchUserByName(username);
+            const viewer = await getTwitchUserByName(this.config, username);
             if (!viewer) {
               throw new Error(
                 `resub: couldnt get the twitch viewer named ${username}`
@@ -105,7 +106,7 @@ export class ChatBot {
         "subgift",
         async (channel, username, monthsDeprecated, recipient, method) => {
           try {
-            const viewer = await twitchChannel.getTwitchUserByName(username);
+            const viewer = await getTwitchUserByName(this.config, username);
             if (!viewer) {
               throw new Error(
                 `subgift: couldnt get the twitch viewer named ${username}`
@@ -113,7 +114,8 @@ export class ChatBot {
             }
             const viewerId = viewer.id;
             const viewerName = viewer.displayName;
-            const recipientUser = await twitchChannel.getTwitchUserByName(
+            const recipientUser = await getTwitchUserByName(
+              this.config,
               recipient
             );
             if (!recipientUser) {
@@ -140,7 +142,7 @@ export class ChatBot {
 
       this.bot.on("raided", async (channel, raider, viewersString: any) => {
         try {
-          const viewer = await twitchChannel.getTwitchUserByName(raider);
+          const viewer = await getTwitchUserByName(this.config, raider);
           if (!viewer) {
             throw new Error(
               `raid: couldnt get the twitch viewer named ${raider}`
@@ -162,7 +164,7 @@ export class ChatBot {
 
       this.bot.on("ban", async (channel, username) => {
         try {
-          const viewer = await twitchChannel.getTwitchUserByName(username);
+          const viewer = await getTwitchUserByName(this.config, username);
           if (!viewer) {
             throw new Error(
               `ban: couldnt get the twitch viewer named ${username}`

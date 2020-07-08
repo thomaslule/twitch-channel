@@ -1,5 +1,6 @@
 import { Client } from "tmi.js";
 import { Config } from "./config";
+import { getTwitchUserByName } from "./get-twitch-user-by-name";
 import { TwitchChannel } from "./twitch-channel";
 
 export class BroadcasterChatBot {
@@ -23,7 +24,7 @@ export class BroadcasterChatBot {
 
       this.bot.on("hosted", async (channel, username, viewers, autohost) => {
         try {
-          const viewer = await twitchChannel.getTwitchUserByName(username);
+          const viewer = await getTwitchUserByName(this.config, username);
           if (!viewer) {
             throw new Error(
               `host: couldnt get the twitch viewer named ${username}`
