@@ -3,26 +3,36 @@ import { Config } from "./config";
 import { TwitchChannel } from "./twitch-channel";
 
 export class Streamlabs {
-  private socket: SocketIOClient.Socket;
+  private activated: boolean;
+  private config!: StreamlabsConfig;
+  private socket!: SocketIOClient.Socket;
   private handledMessages = new Set<string>();
 
-  constructor(private twitchChannel: TwitchChannel, private config: Config) {
-    this.socket = io(
-      `https://sockets.streamlabs.com?token=${this.config.streamlabs_socket_token}`,
-      {
-        autoConnect: false,
-      }
-    );
-    this.socket.on("event", (event: any) => this.eventHandler(event));
+  constructor(private twitchChannel: TwitchChannel, config: Config) {
+    this.activated = config.streamlabs_socket_token !== undefined;
+    if (this.activated) {
+      this.config = config as StreamlabsConfig;
+      this.socket = io(
+        `https://sockets.streamlabs.com?token=${this.config.streamlabs_socket_token}`,
+        {
+          autoConnect: false,
+        }
+      );
+      this.socket.on("event", (event: any) => this.eventHandler(event));
+    }
   }
 
   public start() {
-    this.socket.open();
-    this.twitchChannel.emit("info", "listening to streamlabs events");
+    if (this.activated) {
+      this.socket.open();
+      this.twitchChannel.emit("info", "listening to streamlabs events");
+    }
   }
 
   public stop() {
-    this.socket.close();
+    if (this.activated) {
+      this.socket.close();
+    }
   }
 
   private async eventHandler(event: any) {
@@ -101,4 +111,8 @@ export class Streamlabs {
     }
     return false;
   }
+}
+
+interface StreamlabsConfig extends Config {
+  streamlabs_socket_token: string;
 }

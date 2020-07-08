@@ -12,27 +12,71 @@ Every viewer-related event will have the twitch id and the current display name 
 
 Streamlabs socket notifications (host and donation) are often sent twice by streamlabs, this library takes care of that.
 
-## Initialization
+## Example
 
 ```javascript
 const { TwitchChannel } = require("twitch-channel");
 
 const channel = new TwitchChannel({
   channel: "your_channel",
-  bot_name: "", // twitch bot login
-  bot_token: "", // create your token here https://twitchapps.com/tmi/
-  client_id: "", // get it by registering a twitch app https://dev.twitch.tv/dashboard/apps/create (Redirect URI is not used)
-  client_secret: "", // secret of your registered twitch app
-  streamlabs_socket_token: "", // get yours here https://streamlabs.com/dashboard#/apisettings in API TOKENS then "your socket API token"
-  port: 3100, // the lib will listen to this port
-  callback_url: "", // url to your server, accessible from the outside world
-  is_test: false, // set to true to listen to test donations and hosts from streamlabs
+  client_id: "your_app_id",
+  client_secret: "your_app_secret",
+  bot_name: "your_bot",
+  bot_token: "oauth:your_bot_token",
 });
+
+channel.on("subgift", ({ viewerName, recipientName }) => {
+  console.log(`${viewerName} just subgifted ${recipientName}`);
+});
+channel.on("error", (err) => console.error(err));
+
+await channel.connect();
 ```
 
-### What if I don't have streamlabs?
+## Config options
 
-Just don't put the `streamlabs_secret_token` config then, sadly you won't catch the "host" event, I found no satisfactory way to catch it without Streamlabs.
+### Mandatory config
+
+| Config name   | Type   | Description                                                                                               |
+| ------------- | ------ | --------------------------------------------------------------------------------------------------------- |
+| channel       | string | the channel you want to observe                                                                           |
+| client_id     | string | get it by registering a twitch app https://dev.twitch.tv/dashboard/apps/create (Redirect URI is not used) |
+| client_secret | string | secret of your registered twitch app                                                                      |
+
+### IRC config
+
+Optional config used for events:
+
+- chat
+- cheer
+- sub
+- resub
+- subgift
+- raid
+- ban
+
+| Config name | Type   | Description                                        |
+| ----------- | ------ | -------------------------------------------------- |
+| bot_name    | string | twitch bot login                                   |
+| bot_token   | string | create your token here https://twitchapps.com/tmi/ |
+
+### Webhook config
+
+Optional config used for events:
+
+- follow
+- stream-begin
+- stream-change-game
+- stream-end
+
+| Config name  | Type   | Description                                      |
+| ------------ | ------ | ------------------------------------------------ |
+| callback_url | string | url to your server, accessible from the internet |
+| port         | string | defaults to 80, the lib will listen to this port |
+
+### Streamlabs config
+
+Deprecated stuff
 
 ## Events
 

@@ -7,34 +7,44 @@ import { Config } from "./config";
 import { TwitchChannel } from "./twitch-channel";
 
 export class Webhook {
-  private twitchClient: TwitchClient;
+  private activated: boolean;
+  private config!: WebhookConfig;
+  private twitchClient!: TwitchClient;
   private webhook?: TwitchWebhook;
   private lastGame: string | undefined;
   private followSubscription?: FollowsFromUserSubscription;
   private streamSubscription?: StreamChangeSubscription;
 
-  constructor(private twitchChannel: TwitchChannel, private config: Config) {
-    this.twitchClient = TwitchClient.withClientCredentials(
-      this.config.client_id,
-      this.config.client_secret
-    );
+  constructor(private twitchChannel: TwitchChannel, config: Config) {
+    this.activated = config.callback_url !== undefined;
+    if (this.activated) {
+      this.config = config as WebhookConfig;
+      this.twitchClient = TwitchClient.withClientCredentials(
+        this.config.client_id,
+        this.config.client_secret
+      );
+    }
   }
 
   public async start() {
-    const stream = await this.twitchClient.helix.streams.getStreamByUserName(
-      this.config.channel
-    );
-    this.lastGame = stream ? await this.getGameName(stream.gameId) : undefined;
-    this.webhook = await TwitchWebhook.create(
-      this.twitchClient,
-      this.getCallbackProperties()
-    );
-    this.webhook.listen();
-    await this.subscribe();
+    if (this.activated) {
+      const stream = await this.twitchClient.helix.streams.getStreamByUserName(
+        this.config.channel
+      );
+      this.lastGame = stream
+        ? await this.getGameName(stream.gameId)
+        : undefined;
+      this.webhook = await TwitchWebhook.create(
+        this.twitchClient,
+        this.getCallbackProperties()
+      );
+      this.webhook.listen();
+      await this.subscribe();
+    }
   }
 
   public async stop() {
-    if (this.webhook) {
+    if (this.activated && this.webhook) {
       this.webhook.unlisten();
       await this.followSubscription!.stop();
       await this.streamSubscription!.stop();
@@ -116,4 +126,8 @@ export class Webhook {
       reverseProxy,
     };
   }
+}
+
+interface WebhookConfig extends Config {
+  callback_url: string;
 }

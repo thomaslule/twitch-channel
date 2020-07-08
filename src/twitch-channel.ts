@@ -1,7 +1,12 @@
 import { EventEmitter } from "events";
 import TwitchClient from "twitch";
 import { ChatBot } from "./chat-bot";
-import { Config, getWithDefault, MandatoryConfig } from "./config";
+import {
+  Config,
+  getWithDefault,
+  MandatoryConfig,
+  OptionalConfig,
+} from "./config";
 import { Streamlabs } from "./streamlabs";
 import { Webhook } from "./webhook";
 
@@ -9,17 +14,15 @@ export class TwitchChannel extends EventEmitter {
   private config: Config;
   private webhook: Webhook;
   private chatBot: ChatBot;
-  private streamlabs?: Streamlabs;
+  private streamlabs: Streamlabs;
   private twitchClient: TwitchClient;
 
-  constructor(opts: MandatoryConfig & Partial<Config>) {
+  constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
     super();
     this.config = getWithDefault(opts);
     this.webhook = new Webhook(this, this.config);
     this.chatBot = new ChatBot(this, this.config);
-    this.streamlabs = this.config.streamlabs_socket_token
-      ? new Streamlabs(this, this.config)
-      : undefined;
+    this.streamlabs = new Streamlabs(this, this.config);
     this.twitchClient = TwitchClient.withClientCredentials(
       this.config.client_id,
       this.config.client_secret
@@ -128,17 +131,13 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    if (this.config.streamlabs_socket_token) {
-      this.streamlabs!.start();
-    }
+    this.streamlabs.start();
     await this.chatBot.connect();
     await this.webhook.start();
   }
 
   public async disconnect() {
-    if (this.config.streamlabs_socket_token) {
-      this.streamlabs!.stop();
-    }
+    this.streamlabs.stop();
     await this.chatBot.disconnect();
     await this.webhook.stop();
   }
