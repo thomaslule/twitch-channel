@@ -12,7 +12,7 @@ export class Streamlabs {
         this.options.streamlabs_socket_token
       }`,
       {
-        autoConnect: false
+        autoConnect: false,
       }
     );
     this.socket.on("event", (event: any) => this.eventHandler(event));
@@ -53,7 +53,7 @@ export class Streamlabs {
                 viewerName,
                 amount,
                 currency,
-                message
+                message,
               });
             } else {
               const viewerName = from;
@@ -61,7 +61,7 @@ export class Streamlabs {
                 viewerName,
                 amount,
                 currency,
-                message
+                message,
               });
             }
           } else if (event.type === "host") {
@@ -74,7 +74,7 @@ export class Streamlabs {
               this.twitchChannel.emit("host", {
                 viewerId,
                 viewerName,
-                viewers
+                viewers,
               });
             } else {
               this.twitchChannel.emit(

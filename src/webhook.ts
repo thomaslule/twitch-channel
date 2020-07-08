@@ -1,7 +1,7 @@
 import TwitchClient from "twitch";
 import TwitchWebhook, {
   FollowsFromUserSubscription,
-  StreamChangeSubscription
+  StreamChangeSubscription,
 } from "twitch-webhooks";
 import { Options } from "./options";
 import { TwitchChannel } from "./twitch-channel";
@@ -49,31 +49,34 @@ export class Webhook {
       if (!channel) {
         throw new Error(`channel ${this.options.channel} in options not found`);
       }
-      await this.webhook!.subscribeToFollowsToUser(channel.id, follow => {
+      await this.webhook!.subscribeToFollowsToUser(channel.id, (follow) => {
         const viewerId = follow.userId;
         const viewerName = follow.userDisplayName;
         this.twitchChannel.emit("follow", { viewerId, viewerName });
       });
-      await this.webhook!.subscribeToStreamChanges(channel.id, async stream => {
-        try {
-          if (!stream) {
-            if (this.lastGame !== undefined) {
-              this.twitchChannel.emit("stream-end", {});
-              this.lastGame = undefined;
+      await this.webhook!.subscribeToStreamChanges(
+        channel.id,
+        async (stream) => {
+          try {
+            if (!stream) {
+              if (this.lastGame !== undefined) {
+                this.twitchChannel.emit("stream-end", {});
+                this.lastGame = undefined;
+              }
+            } else {
+              const game = await this.getGameName(stream.gameId);
+              if (this.lastGame === undefined) {
+                this.twitchChannel.emit("stream-begin", { game });
+              } else if (game !== this.lastGame) {
+                this.twitchChannel.emit("stream-change-game", { game });
+              }
+              this.lastGame = game;
             }
-          } else {
-            const game = await this.getGameName(stream.gameId);
-            if (this.lastGame === undefined) {
-              this.twitchChannel.emit("stream-begin", { game });
-            } else if (game !== this.lastGame) {
-              this.twitchChannel.emit("stream-change-game", { game });
-            }
-            this.lastGame = game;
+          } catch (err) {
+            this.twitchChannel.emit("error", err);
           }
-        } catch (err) {
-          this.twitchChannel.emit("error", err);
         }
-      });
+      );
       this.twitchChannel.emit("info", "subscribed to webhooks");
     } catch (err) {
       this.twitchChannel.emit("error", err);
@@ -104,13 +107,13 @@ export class Webhook {
       ? {
           ssl,
           pathPrefix,
-          port: port ? port : ssl ? 443 : 80
+          port: port ? port : ssl ? 443 : 80,
         }
       : undefined;
     return {
       port: this.options.port,
       hostName,
-      reverseProxy
+      reverseProxy,
     };
   }
 }

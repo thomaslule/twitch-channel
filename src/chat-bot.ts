@@ -11,9 +11,9 @@ export class ChatBot {
       connection: { reconnect: true },
       identity: {
         username: this.options.bot_name,
-        password: this.options.bot_token
+        password: this.options.bot_token,
       },
-      channels: [this.options.channel]
+      channels: [this.options.channel],
     });
 
     this.bot.on("chat", (channel, userstate, message, self) => {
@@ -56,7 +56,7 @@ export class ChatBot {
           viewerName,
           message,
           plan,
-          planName
+          planName,
         });
       } catch (err) {
         twitchChannel.emit("error", err);
@@ -87,7 +87,7 @@ export class ChatBot {
             message,
             months: Number.isNaN(months) ? undefined : months,
             plan,
-            planName
+            planName,
           });
         } catch (err) {
           twitchChannel.emit("error", err);
@@ -124,7 +124,7 @@ export class ChatBot {
             recipientId,
             recipientName,
             plan,
-            planName
+            planName,
           });
         } catch (err) {
           twitchChannel.emit("error", err);
@@ -147,7 +147,7 @@ export class ChatBot {
         twitchChannel.emit("raid", {
           viewerId,
           viewerName,
-          viewers
+          viewers,
         });
       } catch (err) {
         twitchChannel.emit("error", err);

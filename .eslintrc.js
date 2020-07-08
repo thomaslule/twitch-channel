@@ -3,15 +3,15 @@ module.exports = {
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "prettier/@typescript-eslint"
+    "prettier/@typescript-eslint",
   ],
   parserOptions: {
     ecmaVersion: 2018,
-    sourceType: "module"
+    sourceType: "module",
   },
   env: {
     node: true,
-    es6: true
+    es6: true,
   },
   rules: {
     "@typescript-eslint/camelcase": "off",
@@ -19,12 +19,12 @@ module.exports = {
     "@typescript-eslint/explicit-member-accessibility": {
       accessibility: "explicit",
       overrides: {
-        constructors: "no-public"
-      }
+        constructors: "no-public",
+      },
     },
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-parameter-properties": "off",
-    "no-dupe-class-members": "off"
-  }
+    "no-dupe-class-members": "off",
+  },
 };

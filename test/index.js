@@ -3,9 +3,9 @@ const options = require("./config");
 
 const channel = new TwitchChannel(options);
 
-channel.on("debug", msg => console.log(msg));
-channel.on("info", msg => console.log(msg));
-channel.on("error", err => console.error(err));
+channel.on("debug", (msg) => console.log(msg));
+channel.on("info", (msg) => console.log(msg));
+channel.on("error", (err) => console.error(err));
 
 // channel.on("chat", event => {
 //   console.log("chat", event);
@@ -28,16 +28,16 @@ channel.on("error", err => console.error(err));
 // channel.on("raid", event => {
 //   console.log("raid", event);
 // });
-channel.on("follow", event => {
+channel.on("follow", (event) => {
   console.log("follow", event);
 });
-channel.on("stream-begin", event => {
+channel.on("stream-begin", (event) => {
   console.log("stream-begin", event);
 });
-channel.on("stream-change-game", event => {
+channel.on("stream-change-game", (event) => {
   console.log("stream-change-game", event);
 });
-channel.on("stream-end", event => {
+channel.on("stream-end", (event) => {
   console.log("stream-end", event);
 });
 // channel.on("streamlabs/donation", event => {
