@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import TwitchClient from "twitch";
+import { BroadcasterChatBot } from "./broadcaster-chat-bot";
 import { ChatBot } from "./chat-bot";
 import {
   Config,
@@ -7,14 +8,13 @@ import {
   MandatoryConfig,
   OptionalConfig,
 } from "./config";
-import { Streamlabs } from "./streamlabs";
 import { Webhook } from "./webhook";
 
 export class TwitchChannel extends EventEmitter {
   private config: Config;
   private webhook: Webhook;
   private chatBot: ChatBot;
-  private streamlabs: Streamlabs;
+  private broadcasterChatBot: BroadcasterChatBot;
   private twitchClient: TwitchClient;
 
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
@@ -22,7 +22,7 @@ export class TwitchChannel extends EventEmitter {
     this.config = getWithDefault(opts);
     this.webhook = new Webhook(this, this.config);
     this.chatBot = new ChatBot(this, this.config);
-    this.streamlabs = new Streamlabs(this, this.config);
+    this.broadcasterChatBot = new BroadcasterChatBot(this, this.config);
     this.twitchClient = TwitchClient.withClientCredentials(
       this.config.client_id,
       this.config.client_secret
@@ -87,6 +87,7 @@ export class TwitchChannel extends EventEmitter {
       viewerId: string;
       viewerName: string;
       viewers: number;
+      autohost: boolean;
     }) => void
   ): this;
   public on(
@@ -114,16 +115,6 @@ export class TwitchChannel extends EventEmitter {
     handler: (param: { game: string }) => void
   ): this;
   public on(event: "stream-end", handler: () => void): this;
-  public on(
-    event: "streamlabs/donation",
-    handler: (param: {
-      viewerId?: string;
-      viewerName: string;
-      amount: number;
-      currency: string;
-      message?: string;
-    }) => void
-  ): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this {
     super.on(event, handler);
@@ -131,14 +122,14 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    this.streamlabs.start();
     await this.chatBot.connect();
+    await this.broadcasterChatBot.connect();
     await this.webhook.start();
   }
 
   public async disconnect() {
-    this.streamlabs.stop();
     await this.chatBot.disconnect();
+    await this.broadcasterChatBot.disconnect();
     await this.webhook.stop();
   }
 

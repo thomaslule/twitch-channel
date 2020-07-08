@@ -2,15 +2,9 @@
 
 A small library to listen to various events that can happen on a twitch channel (chat messages, hosts, donations, raids, subscriptions…)
 
-You just have to provide the config and make your app reachable from the internet, this library connects to the chat, subscribes to webhooks, listen to streamlabs socket. It provides a nice abstraction layer for the various twitch APIs.
+You just have to provide the config and make your app reachable from the internet, this library connects to the chat and subscribes to webhooks.
 
-## The good things
-
-The event objects are kept simple and without surprises.
-
-Every viewer-related event will have the twitch id and the current display name in `viewerId` and `viewerName` fields.
-
-Streamlabs socket notifications (host and donation) are often sent twice by streamlabs, this library takes care of that.
+The event objects are kept simple and without surprises. Every viewer-related event will have the twitch id and the current display name in `viewerId` and `viewerName` fields.
 
 ## Example
 
@@ -60,6 +54,18 @@ Optional config used for events:
 | bot_name    | string | twitch bot login                                   |
 | bot_token   | string | create your token here https://twitchapps.com/tmi/ |
 
+### Broadcaster IRC config
+
+If you want to catch the `host` event, you must provide a token from the broadcaster account.
+
+Optional config used for events:
+
+- host
+
+| Config name           | Type   | Description                                                                      |
+| --------------------- | ------ | -------------------------------------------------------------------------------- |
+| broadcaster_bot_token | string | create your token here https://twitchapps.com/tmi/ (use the broadcaster account) |
+
 ### Webhook config
 
 Optional config used for events:
@@ -73,10 +79,6 @@ Optional config used for events:
 | ------------ | ------ | ------------------------------------------------ |
 | callback_url | string | url to your server, accessible from the internet |
 | port         | string | defaults to 80, the lib will listen to this port |
-
-### Streamlabs config
-
-Deprecated stuff
 
 ## Events
 
@@ -97,8 +99,7 @@ channel.on(
   "subgift",
   ({ viewerId, viewerName, recipientId, recipientName, plan, planName }) => {}
 );
-// you need to provide the streamlabs_socket_token config to catch "host" events
-channel.on("host", ({ viewerId, viewerName, viewers }) => {});
+channel.on("host", ({ viewerId, viewerName, viewers, autohost }) => {});
 channel.on("raid", ({ viewerId, viewerName, viewers }) => {});
 channel.on("follow", ({ viewerId, viewerName }) => {});
 // you need to make the bot moderator of the channel to catch "ban" events
@@ -106,11 +107,6 @@ channel.on("ban", ({ viewerId, viewerName }) => {});
 channel.on("stream-begin", ({ game }) => {});
 channel.on("stream-change-game", ({ game }) => {});
 channel.on("stream-end", () => {});
-channel.on(
-  "streamlabs/donation",
-  // viewerId provided when found from the donator name
-  ({ viewerId, viewerName, amount, currency, message }) => {}
-);
 ```
 
 TwichChannel is an `EventEmitter`, you can use all of its methods too.

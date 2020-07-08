@@ -1,6 +1,5 @@
 const defaultConfig = {
   port: 80,
-  is_test: false,
 };
 
 export function getWithDefault(config: MandatoryConfig): Config {
@@ -9,7 +8,6 @@ export function getWithDefault(config: MandatoryConfig): Config {
 
 export interface Config extends MandatoryConfig, Partial<OptionalConfig> {
   port: number;
-  is_test: boolean;
 }
 
 export interface MandatoryConfig {
@@ -21,8 +19,7 @@ export interface MandatoryConfig {
 export interface OptionalConfig {
   bot_name: string;
   bot_token: string;
+  broadcaster_bot_token: string;
   callback_url: string;
   port: number;
-  is_test: boolean;
-  streamlabs_socket_token: string;
 }

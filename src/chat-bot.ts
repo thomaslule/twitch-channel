@@ -185,7 +185,10 @@ export class ChatBot {
       this.bot.readyState() !== "OPEN"
     ) {
       await this.bot.connect();
-      this.twitchChannel.emit("info", "connected to the IRC chat");
+      this.twitchChannel.emit(
+        "info",
+        "connected to the IRC chat with the bot account"
+      );
     }
   }
 
