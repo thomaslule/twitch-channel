@@ -60,9 +60,17 @@ export class Webhook {
         throw new Error(`channel ${this.config.channel} not found`);
       }
       await this.webhook!.subscribeToFollowsToUser(channel.id, (follow) => {
-        const viewerId = follow.userId;
-        const viewerName = follow.userDisplayName;
-        this.twitchChannel.emit("follow", { viewerId, viewerName });
+        try {
+          const viewerId = follow.userId;
+          const viewerName = follow.userDisplayName;
+          this.twitchChannel.emit("follow", { viewerId, viewerName });
+        } catch (error) {
+          this.twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a follow event",
+            error,
+          });
+        }
       });
       await this.webhook!.subscribeToStreamChanges(
         channel.id,
@@ -82,14 +90,25 @@ export class Webhook {
               }
               this.lastGame = game;
             }
-          } catch (err) {
-            this.twitchChannel.emit("error", err);
+          } catch (error) {
+            this.twitchChannel.emit("log", {
+              level: "error",
+              message: "an error happened during a stream change event",
+              error,
+            });
           }
         }
       );
-      this.twitchChannel.emit("info", "subscribed to webhooks");
-    } catch (err) {
-      this.twitchChannel.emit("error", err);
+      this.twitchChannel.emit("log", {
+        level: "info",
+        message: "subscribed to webhooks",
+      });
+    } catch (error) {
+      this.twitchChannel.emit("log", {
+        level: "error",
+        message: "an error happened during the webhook subscription",
+        error,
+      });
     }
   }
 

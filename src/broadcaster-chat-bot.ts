@@ -38,8 +38,12 @@ export class BroadcasterChatBot {
             viewers,
             autohost,
           });
-        } catch (err) {
-          twitchChannel.emit("error", err);
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a host event",
+            error,
+          });
         }
       });
     }
@@ -52,10 +56,10 @@ export class BroadcasterChatBot {
       this.bot.readyState() !== "OPEN"
     ) {
       await this.bot.connect();
-      this.twitchChannel.emit(
-        "info",
-        "connected to the IRC chat with the broadcaster account"
-      );
+      this.twitchChannel.emit("log", {
+        level: "info",
+        message: "connected to the IRC chat with the broadcaster account",
+      });
     }
   }
 

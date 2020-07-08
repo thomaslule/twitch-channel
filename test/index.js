@@ -3,9 +3,9 @@ const config = require("./config");
 
 const channel = new TwitchChannel(config);
 
-channel.on("debug", (msg) => console.log(msg));
-channel.on("info", (msg) => console.log(msg));
-channel.on("error", (err) => console.error(err));
+channel.on("log", (event) => {
+  console.log(event);
+});
 
 channel.on("chat", (event) => {
   console.log("chat", event);

@@ -24,26 +24,43 @@ export class ChatBot {
       });
 
       this.bot.on("chat", (channel, userstate, message, self) => {
-        if (self) {
-          return;
+        try {
+          if (self) {
+            return;
+          }
+          const viewerId = userstate["user-id"];
+          const viewerName = userstate["display-name"];
+          twitchChannel.emit("chat", { viewerId, viewerName, message });
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a chat event",
+            error,
+          });
         }
-        const viewerId = userstate["user-id"];
-        const viewerName = userstate["display-name"];
-        twitchChannel.emit("chat", { viewerId, viewerName, message });
       });
 
       this.bot.on("cheer", (channel, userstate, message) => {
-        const viewerId = userstate["user-id"];
-        const viewerName = userstate["display-name"];
-        const amount = parseInt(userstate.bits!, 10);
-        if (isNaN(amount)) {
-          twitchChannel.emit(
-            "error",
-            `cheer amount was not a number: ${userstate.bits}`
-          );
-          return;
+        try {
+          const viewerId = userstate["user-id"];
+          const viewerName = userstate["display-name"];
+          const amount = parseInt(userstate.bits!, 10);
+          if (isNaN(amount)) {
+            throw new Error(`cheer amount was not a number: ${userstate.bits}`);
+          }
+          twitchChannel.emit("cheer", {
+            viewerId,
+            viewerName,
+            amount,
+            message,
+          });
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a cheer event",
+            error,
+          });
         }
-        twitchChannel.emit("cheer", { viewerId, viewerName, amount, message });
       });
 
       this.bot.on("subscription", async (channel, username, method, msg) => {
@@ -65,8 +82,12 @@ export class ChatBot {
             plan,
             planName,
           });
-        } catch (err) {
-          twitchChannel.emit("error", err);
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a subscription event",
+            error,
+          });
         }
       });
 
@@ -96,8 +117,12 @@ export class ChatBot {
               plan,
               planName,
             });
-          } catch (err) {
-            twitchChannel.emit("error", err);
+          } catch (error) {
+            twitchChannel.emit("log", {
+              level: "error",
+              message: "an error happened during a resub event",
+              error,
+            });
           }
         }
       );
@@ -134,8 +159,12 @@ export class ChatBot {
               plan,
               planName,
             });
-          } catch (err) {
-            twitchChannel.emit("error", err);
+          } catch (error) {
+            twitchChannel.emit("log", {
+              level: "error",
+              message: "an error happened during a subgift event",
+              error,
+            });
           }
         }
       );
@@ -157,8 +186,12 @@ export class ChatBot {
             viewerName,
             viewers,
           });
-        } catch (err) {
-          twitchChannel.emit("error", err);
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a raided event",
+            error,
+          });
         }
       });
 
@@ -173,8 +206,12 @@ export class ChatBot {
           const viewerId = viewer.id;
           const viewerName = viewer.displayName;
           twitchChannel.emit("ban", { viewerId, viewerName });
-        } catch (err) {
-          twitchChannel.emit("error", err);
+        } catch (error) {
+          twitchChannel.emit("log", {
+            level: "error",
+            message: "an error happened during a ban event",
+            error,
+          });
         }
       });
     }
@@ -187,10 +224,10 @@ export class ChatBot {
       this.bot.readyState() !== "OPEN"
     ) {
       await this.bot.connect();
-      this.twitchChannel.emit(
-        "info",
-        "connected to the IRC chat with the bot account"
-      );
+      this.twitchChannel.emit("log", {
+        level: "info",
+        message: "connected to the IRC chat with the bot account",
+      });
     }
   }
 
@@ -201,12 +238,6 @@ export class ChatBot {
       this.bot.readyState() !== "CLOSED"
     ) {
       await this.bot.disconnect();
-    }
-  }
-
-  public say(message: string) {
-    if (this.activated) {
-      this.bot.say(`#${this.config.channel}`, message);
     }
   }
 }

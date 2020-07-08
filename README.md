@@ -22,7 +22,13 @@ const channel = new TwitchChannel({
 channel.on("subgift", ({ viewerName, recipientName }) => {
   console.log(`${viewerName} just subgifted ${recipientName}`);
 });
-channel.on("error", (err) => console.error(err));
+channel.on("log", ({ level, message, error }) => {
+  if (level === "error") {
+    console.error(`${level}: ${message}`, error);
+  } else {
+    console.log(`${level}: ${message}`);
+  }
+});
 
 await channel.connect();
 ```
@@ -83,10 +89,7 @@ Optional config used for events:
 ## Events
 
 ```javascript
-channel.on("debug", (msg) => console.log(msg));
-channel.on("info", (msg) => console.log(msg));
-channel.on("error", (err) => console.error(err));
-
+channel.on("log", ({ level, message, error }) => {});
 channel.on("chat", ({ viewerId, viewerName, message }) => {});
 channel.on("cheer", ({ viewerId, viewerName, amount, message }) => {});
 // for subs/resubs/subgifts, plan === "1000", "2000", "3000" or "Prime". See msg-param-sub-plan here https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
@@ -111,8 +114,6 @@ channel.on("stream-end", () => {});
 
 TwichChannel is an `EventEmitter`, you can use all of its methods too.
 
-You **should** set a listener for `error` otherwise it will throw on errors: https://nodejs.org/api/events.html#events_error_events
-
 ## Methods
 
 ```javascript
@@ -127,3 +128,4 @@ await channel.disconnect();
 - to catch the `host` event, you must now provide the `broadcaster_bot_token` config
 - the `host` event is now also fired with auto-hosts, it has a new `autohost` boolean property
 - the `say` and `getTopClipper` functions have been removed
+- the `error`, `info` and `debug` events are replaced by a `log` event (which has a new `warn` level)

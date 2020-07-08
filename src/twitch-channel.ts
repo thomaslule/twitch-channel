@@ -17,15 +17,27 @@ export class TwitchChannel extends EventEmitter {
 
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
     super();
+    this.on("error", (error) => {
+      this.emit("log", {
+        level: "error",
+        message: "an uncaught error happened in a listener",
+        error,
+      });
+    });
     this.config = getWithDefault(opts);
     this.webhook = new Webhook(this, this.config);
     this.chatBot = new ChatBot(this, this.config);
     this.broadcasterChatBot = new BroadcasterChatBot(this, this.config);
   }
 
-  public on(event: "debug", handler: (param: string) => void): this;
-  public on(event: "info", handler: (param: string) => void): this;
-  public on(event: "error", handler: (param: string | object) => void): this;
+  public on(
+    event: "log",
+    handler: (param: {
+      level: "error" | "warn" | "info" | "debug";
+      message: string;
+      error: unknown;
+    }) => void
+  ): this;
   public on(
     event: "chat",
     handler: (param: {
