@@ -1,19 +1,19 @@
 import { Client } from "tmi.js";
-import { Options } from "./options";
+import { Config } from "./config";
 import { TwitchChannel } from "./twitch-channel";
 
 export class ChatBot {
   private bot: Client;
 
-  constructor(twitchChannel: TwitchChannel, private options: Options) {
+  constructor(twitchChannel: TwitchChannel, private config: Config) {
     this.bot = Client({
       options: { debug: false },
       connection: { reconnect: true },
       identity: {
-        username: this.options.bot_name,
-        password: this.options.bot_token,
+        username: this.config.bot_name,
+        password: this.config.bot_token,
       },
-      channels: [this.options.channel],
+      channels: [this.config.channel],
     });
 
     this.bot.on("chat", (channel, userstate, message, self) => {
@@ -190,6 +190,6 @@ export class ChatBot {
   }
 
   public say(message: string) {
-    this.bot.say(`#${this.options.channel}`, message);
+    this.bot.say(`#${this.config.channel}`, message);
   }
 }

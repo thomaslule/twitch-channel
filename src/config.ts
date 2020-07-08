@@ -1,14 +1,14 @@
-const defaultOptions = {
+const defaultConfig = {
   port: 80,
   is_test: false,
   streamlabs_socket_token: undefined,
 };
 
-export function getWithDefault(options: MandatoryOptions): Options {
-  return { ...defaultOptions, ...options };
+export function getWithDefault(config: MandatoryConfig): Config {
+  return { ...defaultConfig, ...config };
 }
 
-export interface MandatoryOptions {
+export interface MandatoryConfig {
   channel: string;
   bot_name: string;
   bot_token: string;
@@ -17,7 +17,7 @@ export interface MandatoryOptions {
   callback_url: string;
 }
 
-export interface Options extends MandatoryOptions {
+export interface Config extends MandatoryConfig {
   port: number;
   is_test: boolean;
   streamlabs_socket_token?: string;

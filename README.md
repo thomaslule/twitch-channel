@@ -2,7 +2,7 @@
 
 A small library to listen to various events that can happen on a twitch channel (chat messages, hosts, donations, raids, subscriptions…)
 
-You just have to provide the config options and make your app reachable from the internet, this library connects to the chat, subscribes to webhooks, listen to streamlabs socket. It provides a nice abstraction layer for the various twitch APIs.
+You just have to provide the config and make your app reachable from the internet, this library connects to the chat, subscribes to webhooks, listen to streamlabs socket. It provides a nice abstraction layer for the various twitch APIs.
 
 ## The good things
 
@@ -32,7 +32,7 @@ const channel = new TwitchChannel({
 
 ### What if I don't have streamlabs?
 
-Just don't put the `streamlabs_secret_token` option then, sadly you won't catch the "host" event, I found no satisfactory way to catch it without Streamlabs.
+Just don't put the `streamlabs_secret_token` config then, sadly you won't catch the "host" event, I found no satisfactory way to catch it without Streamlabs.
 
 ## Events
 
@@ -53,7 +53,7 @@ channel.on(
   "subgift",
   ({ viewerId, viewerName, recipientId, recipientName, plan, planName }) => {}
 );
-// you need to provide the streamlabs_socket_token option to catch "host" events
+// you need to provide the streamlabs_socket_token config to catch "host" events
 channel.on("host", ({ viewerId, viewerName, viewers }) => {});
 channel.on("raid", ({ viewerId, viewerName, viewers }) => {});
 channel.on("follow", ({ viewerId, viewerName }) => {});

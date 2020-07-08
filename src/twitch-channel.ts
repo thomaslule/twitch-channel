@@ -1,28 +1,28 @@
 import { EventEmitter } from "events";
 import TwitchClient from "twitch";
 import { ChatBot } from "./chat-bot";
-import { getWithDefault, MandatoryOptions, Options } from "./options";
+import { Config, getWithDefault, MandatoryConfig } from "./config";
 import { Streamlabs } from "./streamlabs";
 import { Webhook } from "./webhook";
 
 export class TwitchChannel extends EventEmitter {
-  private options: Options;
+  private config: Config;
   private webhook: Webhook;
   private chatBot: ChatBot;
   private streamlabs?: Streamlabs;
   private twitchClient: TwitchClient;
 
-  constructor(opts: MandatoryOptions & Partial<Options>) {
+  constructor(opts: MandatoryConfig & Partial<Config>) {
     super();
-    this.options = getWithDefault(opts);
-    this.webhook = new Webhook(this, this.options);
-    this.chatBot = new ChatBot(this, this.options);
-    this.streamlabs = this.options.streamlabs_socket_token
-      ? new Streamlabs(this, this.options)
+    this.config = getWithDefault(opts);
+    this.webhook = new Webhook(this, this.config);
+    this.chatBot = new ChatBot(this, this.config);
+    this.streamlabs = this.config.streamlabs_socket_token
+      ? new Streamlabs(this, this.config)
       : undefined;
     this.twitchClient = TwitchClient.withClientCredentials(
-      this.options.client_id,
-      this.options.client_secret
+      this.config.client_id,
+      this.config.client_secret
     );
   }
 
@@ -128,7 +128,7 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    if (this.options.streamlabs_socket_token) {
+    if (this.config.streamlabs_socket_token) {
       this.streamlabs!.start();
     }
     await this.chatBot.connect();
@@ -136,7 +136,7 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async disconnect() {
-    if (this.options.streamlabs_socket_token) {
+    if (this.config.streamlabs_socket_token) {
       this.streamlabs!.stop();
     }
     await this.chatBot.disconnect();
@@ -162,9 +162,9 @@ export class TwitchChannel extends EventEmitter {
     const lastWeek = new Date(
       new Date().getTime() - 7 * 24 * 60 * 60 * 1000
     ).toISOString();
-    const channel = await this.getTwitchUserByName(this.options.channel);
+    const channel = await this.getTwitchUserByName(this.config.channel);
     if (channel === undefined) {
-      throw new Error(`channel ${this.options.channel} in options not found`);
+      throw new Error(`channel ${this.config.channel} not found`);
     }
     const res = await this.twitchClient.helix.clips.getClipsForBroadcaster(
       channel.id,

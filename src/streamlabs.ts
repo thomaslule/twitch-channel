@@ -1,16 +1,14 @@
 import * as io from "socket.io-client";
-import { Options } from "./options";
+import { Config } from "./config";
 import { TwitchChannel } from "./twitch-channel";
 
 export class Streamlabs {
   private socket: SocketIOClient.Socket;
   private handledMessages = new Set<string>();
 
-  constructor(private twitchChannel: TwitchChannel, private options: Options) {
+  constructor(private twitchChannel: TwitchChannel, private config: Config) {
     this.socket = io(
-      `https://sockets.streamlabs.com?token=${
-        this.options.streamlabs_socket_token
-      }`,
+      `https://sockets.streamlabs.com?token=${this.config.streamlabs_socket_token}`,
       {
         autoConnect: false,
       }
@@ -34,7 +32,7 @@ export class Streamlabs {
       }
       await Promise.all(
         event.message.map(async (streamlabsMsg: any) => {
-          if (!this.options.is_test && streamlabsMsg.isTest) {
+          if (!this.config.is_test && streamlabsMsg.isTest) {
             return;
           }
           if (this.isDuplicateMessage(streamlabsMsg)) {

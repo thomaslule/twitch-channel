@@ -1,7 +1,7 @@
 const { TwitchChannel } = require("../lib");
-const options = require("./config");
+const config = require("./config");
 
-const channel = new TwitchChannel(options);
+const channel = new TwitchChannel(config);
 
 channel.on("debug", (msg) => console.log(msg));
 channel.on("info", (msg) => console.log(msg));

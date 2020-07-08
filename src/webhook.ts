@@ -3,7 +3,7 @@ import TwitchWebhook, {
   FollowsFromUserSubscription,
   StreamChangeSubscription,
 } from "twitch-webhooks";
-import { Options } from "./options";
+import { Config } from "./config";
 import { TwitchChannel } from "./twitch-channel";
 
 export class Webhook {
@@ -13,16 +13,16 @@ export class Webhook {
   private followSubscription?: FollowsFromUserSubscription;
   private streamSubscription?: StreamChangeSubscription;
 
-  constructor(private twitchChannel: TwitchChannel, private options: Options) {
+  constructor(private twitchChannel: TwitchChannel, private config: Config) {
     this.twitchClient = TwitchClient.withClientCredentials(
-      this.options.client_id,
-      this.options.client_secret
+      this.config.client_id,
+      this.config.client_secret
     );
   }
 
   public async start() {
     const stream = await this.twitchClient.helix.streams.getStreamByUserName(
-      this.options.channel
+      this.config.channel
     );
     this.lastGame = stream ? await this.getGameName(stream.gameId) : undefined;
     this.webhook = await TwitchWebhook.create(
@@ -44,10 +44,10 @@ export class Webhook {
   private async subscribe() {
     try {
       const channel = await this.twitchClient.helix.users.getUserByName(
-        this.options.channel
+        this.config.channel
       );
       if (!channel) {
-        throw new Error(`channel ${this.options.channel} in options not found`);
+        throw new Error(`channel ${this.config.channel} not found`);
       }
       await this.webhook!.subscribeToFollowsToUser(channel.id, (follow) => {
         const viewerId = follow.userId;
@@ -90,11 +90,11 @@ export class Webhook {
   }
 
   private getCallbackProperties() {
-    const urlRegex = this.options.callback_url.match(
+    const urlRegex = this.config.callback_url.match(
       /^(https?):\/\/([^/:]*)(:[0-9]+)?(\/.*)?$/
     );
     if (!urlRegex) {
-      throw new Error(`Invalid callback url: ${this.options.callback_url}`);
+      throw new Error(`Invalid callback url: ${this.config.callback_url}`);
     }
     const ssl = urlRegex[1] === "https";
     const hostName = urlRegex[2];
@@ -102,7 +102,7 @@ export class Webhook {
       ? parseInt(urlRegex[3].substring(1), 10)
       : undefined;
     const pathPrefix = urlRegex[4] === "/" ? undefined : urlRegex[4];
-    const behindProxy = ssl || pathPrefix || port !== this.options.port;
+    const behindProxy = ssl || pathPrefix || port !== this.config.port;
     const reverseProxy = behindProxy
       ? {
           ssl,
@@ -111,7 +111,7 @@ export class Webhook {
         }
       : undefined;
     return {
-      port: this.options.port,
+      port: this.config.port,
       hostName,
       reverseProxy,
     };
