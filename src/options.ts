@@ -15,7 +15,6 @@ export interface MandatoryOptions {
   client_id: string;
   client_secret: string;
   callback_url: string;
-  secret: string;
 }
 
 export interface Options extends MandatoryOptions {

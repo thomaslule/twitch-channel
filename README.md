@@ -26,7 +26,6 @@ const channel = new TwitchChannel({
   streamlabs_socket_token: "", // get yours here https://streamlabs.com/dashboard#/apisettings in API TOKENS then "your socket API token"
   port: 3100, // the lib will listen to this port
   callback_url: "", // url to your server, accessible from the outside world
-  secret: "", // any random string
   is_test: false, // set to true to listen to test donations and hosts from streamlabs
 });
 ```
