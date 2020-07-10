@@ -1,10 +1,33 @@
-# twitch-channel
+# twitch-channel <!-- omit in toc -->
 
 A small library to listen to various events that can happen on a twitch channel (chat messages, hosts, donations, raids, subscriptions…)
 
-You just have to provide the config and make your app reachable from the internet, this library connects to the chat and subscribes to webhooks.
+This library acts as a layer on top of various twitch APIs (currently: IRC and Webhooks) so you only have to interact with a single EventEmitter that emits uniform events.
 
 The event objects are kept simple and without surprises. Every viewer-related event will have the twitch id and the current display name in `viewerId` and `viewerName` fields.
+
+- [Example](#example)
+- [Config options](#config-options)
+  - [Mandatory config](#mandatory-config)
+  - [IRC config](#irc-config)
+  - [Broadcaster IRC config](#broadcaster-irc-config)
+  - [Webhook config](#webhook-config)
+- [Events](#events)
+  - [`log`](#log)
+  - [`chat`](#chat)
+  - [`cheer`](#cheer)
+  - [`sub`](#sub)
+  - [`resub`](#resub)
+  - [`subgift`](#subgift)
+  - [`host`](#host)
+  - [`raid`](#raid)
+  - [`ban`](#ban)
+  - [`follow`](#follow)
+  - [`stream-begin`](#stream-begin)
+  - [`stream-change-game`](#stream-change-game)
+  - [`stream-end`](#stream-end)
+- [Methods](#methods)
+- [Upgrade from v0 to v1](#upgrade-from-v0-to-v1)
 
 ## Example
 
@@ -53,7 +76,7 @@ Optional config used for events:
 - resub
 - subgift
 - raid
-- ban
+- ban (emitted only if the bot is a moderator)
 
 | Config name | Type   | Description                                        |
 | ----------- | ------ | -------------------------------------------------- |
@@ -88,31 +111,136 @@ Optional config used for events:
 
 ## Events
 
-```javascript
-channel.on("log", ({ level, message, error }) => {});
-channel.on("chat", ({ viewerId, viewerName, message }) => {});
-channel.on("cheer", ({ viewerId, viewerName, amount, message }) => {});
-// for subs/resubs/subgifts, plan === "1000", "2000", "3000" or "Prime". See msg-param-sub-plan here https://dev.twitch.tv/docs/irc/tags/#usernotice-twitch-tags
-channel.on("sub", ({ viewerId, viewerName, message, plan, planName }) => {});
-channel.on(
-  "resub",
-  ({ viewerId, viewerName, message, months, plan, planName }) => {}
-);
-channel.on(
-  "subgift",
-  ({ viewerId, viewerName, recipientId, recipientName, plan, planName }) => {}
-);
-channel.on("host", ({ viewerId, viewerName, viewers, autohost }) => {});
-channel.on("raid", ({ viewerId, viewerName, viewers }) => {});
-channel.on("follow", ({ viewerId, viewerName }) => {});
-// you need to make the bot moderator of the channel to catch "ban" events
-channel.on("ban", ({ viewerId, viewerName }) => {});
-channel.on("stream-begin", ({ game }) => {});
-channel.on("stream-change-game", ({ game }) => {});
-channel.on("stream-end", () => {});
+### `log`
+
+```typescript
+{
+  level: "error" | "warn" | "info" | "debug";
+  message: string;
+  error: unknown;
+}
 ```
 
-TwichChannel is an `EventEmitter`, you can use all of its methods too.
+### `chat`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  message: string;
+}
+```
+
+### `cheer`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  amount: number;
+  message: string;
+}
+```
+
+### `sub`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  message?: string;
+  plan?: "Prime" | "1000" | "2000" | "3000";
+  planName?: string;
+}
+```
+
+### `resub`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  message?: string;
+  months?: number;
+  plan?: "Prime" | "1000" | "2000" | "3000";
+  planName?: string;
+}
+```
+
+### `subgift`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  recipientId: string;
+  recipientName: string;
+  plan?: "Prime" | "1000" | "2000" | "3000";
+  planName?: string;
+}
+```
+
+### `host`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  viewers: number;
+  autohost: boolean;
+}
+```
+
+### `raid`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  viewers: number;
+}
+```
+
+### `ban`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+}
+```
+
+### `follow`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+}
+```
+
+### `stream-begin`
+
+```typescript
+{
+  game: string;
+}
+```
+
+### `stream-change-game`
+
+```typescript
+{
+  game: string;
+}
+```
+
+### `stream-end`
+
+```typescript
+{
+}
+```
 
 ## Methods
 
@@ -121,6 +249,8 @@ await channel.connect();
 
 await channel.disconnect();
 ```
+
+TwichChannel is an [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter), you can use all of its methods too.
 
 ## Upgrade from v0 to v1
 
