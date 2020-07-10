@@ -125,14 +125,18 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    await this.chatBot.connect();
-    await this.broadcasterChatBot.connect();
-    await this.webhook.start();
+    await Promise.all([
+      this.chatBot.connect(),
+      this.broadcasterChatBot.connect(),
+      this.webhook.start(),
+    ]);
   }
 
   public async disconnect() {
-    await this.chatBot.disconnect();
-    await this.broadcasterChatBot.disconnect();
-    await this.webhook.stop();
+    await Promise.all([
+      this.chatBot.disconnect(),
+      this.broadcasterChatBot.disconnect(),
+      this.webhook.stop(),
+    ]);
   }
 }
