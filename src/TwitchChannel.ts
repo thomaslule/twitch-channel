@@ -1,14 +1,14 @@
 import { EventEmitter } from "events";
-import { BroadcasterChatBot } from "./broadcaster-chat-bot";
-import { ChatBot } from "./chat-bot";
+import { BroadcasterChatBot } from "./BroadcasterChatBot";
+import { ChatBot } from "./ChatBot";
 import {
   Config,
   getWithDefault,
   MandatoryConfig,
   OptionalConfig,
-} from "./config";
+} from "./Config";
 import { log } from "./log";
-import { Webhook } from "./webhook";
+import { Webhook } from "./Webhook";
 
 export class TwitchChannel extends EventEmitter {
   private config: Config;

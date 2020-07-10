@@ -1,8 +1,8 @@
 import { Client } from "tmi.js";
-import { Config } from "./config";
-import { getTwitchUserByName } from "./get-twitch-user-by-name";
+import { Config } from "./Config";
+import { getTwitchUserByName } from "./getTwitchUserByName";
 import { log } from "./log";
-import { TwitchChannel } from "./twitch-channel";
+import { TwitchChannel } from "./TwitchChannel";
 
 export class BroadcasterChatBot {
   private activated: boolean;

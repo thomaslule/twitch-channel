@@ -1,5 +1,5 @@
 import TwitchClient from "twitch";
-import { Config } from "./config";
+import { Config } from "./Config";
 
 export async function getTwitchUserByName(config: Config, name: string) {
   const twitchClient = TwitchClient.withClientCredentials(

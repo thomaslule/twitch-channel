@@ -1,1 +1,1 @@
-export { TwitchChannel } from "./twitch-channel";
+export { TwitchChannel } from "./TwitchChannel";

@@ -3,9 +3,9 @@ import TwitchWebhook, {
   FollowsFromUserSubscription,
   StreamChangeSubscription,
 } from "twitch-webhooks";
-import { Config } from "./config";
+import { Config } from "./Config";
 import { log } from "./log";
-import { TwitchChannel } from "./twitch-channel";
+import { TwitchChannel } from "./TwitchChannel";
 
 export class Webhook {
   private activated: boolean;
