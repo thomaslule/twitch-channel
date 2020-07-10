@@ -15,8 +15,10 @@ export class ChatBot {
     if (this.activated) {
       this.config = config as ChatBotConfig;
       this.bot = Client({
-        options: { debug: false },
-        connection: { reconnect: true },
+        connection: {
+          secure: true,
+          reconnect: true,
+        },
         identity: {
           username: this.config.bot_name,
           password: this.config.bot_token,

@@ -14,8 +14,10 @@ export class BroadcasterChatBot {
     if (this.activated) {
       this.config = config as BroadcasterChatBotConfig;
       this.bot = Client({
-        options: { debug: false },
-        connection: { reconnect: true },
+        connection: {
+          secure: true,
+          reconnect: true,
+        },
         identity: {
           username: this.config.channel,
           password: this.config.broadcaster_bot_token,
