@@ -1,4 +1,6 @@
 import axios from "axios";
+import { json } from "body-parser";
+import { createHmac, randomBytes } from "crypto";
 import * as express from "express";
 import { Server } from "http";
 import * as morgan from "morgan";
@@ -16,7 +18,13 @@ export class TwitchWebhook {
     );
     this.app = express();
     this.app.use(morgan("tiny"));
-    this.app.use(express.json());
+    this.app.use(
+      json({
+        verify: (req: RequestWithRaw, res, buf) => {
+          req.rawBody = buf;
+        },
+      })
+    );
   }
 
   public async listen() {
@@ -67,12 +75,23 @@ export class TwitchWebhook {
     callback: (event: TEvent) => void
   ) {
     const subscription = { active: true };
+    const secret = randomBytes(20).toString("hex");
     try {
-      this.registerMiddleware(callbackPath, callback, subscription);
-      await this.sendSubscriptionRequest("subscribe", callbackPath, topic);
+      this.registerMiddleware(callbackPath, callback, subscription, secret);
+      await this.sendSubscriptionRequest(
+        "subscribe",
+        callbackPath,
+        topic,
+        secret
+      );
       const stop = async () => {
         subscription.active = false;
-        await this.sendSubscriptionRequest("unsubscribe", callbackPath, topic);
+        await this.sendSubscriptionRequest(
+          "unsubscribe",
+          callbackPath,
+          topic,
+          secret
+        );
       };
       return { stop };
     } catch (err) {
@@ -84,43 +103,38 @@ export class TwitchWebhook {
   private async registerMiddleware<TEvent>(
     callbackPath: string,
     callback: (event: TEvent) => void,
-    subscription: { active: boolean }
+    subscription: { active: boolean },
+    secret: string
   ) {
-    this.app.get(
-      `/${callbackPath}`,
-      (
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction
-      ) => {
-        if (subscription.active) {
-          res.send(req.query["hub.challenge"]).end();
-        } else {
-          next();
-        }
+    this.app.get(`/${callbackPath}`, (req, res, next) => {
+      if (subscription.active) {
+        res.send(req.query["hub.challenge"]).end();
+      } else {
+        next();
       }
-    );
-    this.app.post(
-      `/${callbackPath}`,
-      (
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction
-      ) => {
-        if (subscription.active) {
-          res.sendStatus(200);
-          callback(req.body.data[0]);
-        } else {
-          next();
-        }
+    });
+    this.app.post(`/${callbackPath}`, (req, res, next) => {
+      if (
+        subscription.active &&
+        this.verifySignature(
+          req.get("X-Hub-Signature")!,
+          secret,
+          (req as RequestWithRaw).rawBody
+        )
+      ) {
+        res.sendStatus(200);
+        callback(req.body.data[0]);
+      } else {
+        next();
       }
-    );
+    });
   }
 
   private async sendSubscriptionRequest(
     mode: "subscribe" | "unsubscribe",
     callbackPath: string,
-    topic: string
+    topic: string,
+    secret: string
   ) {
     const token = await this.twitchClient.getAccessToken();
     await axios.post(
@@ -130,6 +144,7 @@ export class TwitchWebhook {
         "hub.mode": mode,
         "hub.topic": `https://api.twitch.tv/helix/${topic}`,
         "hub.lease_seconds": 600,
+        "hub.secret": secret,
       },
       {
         headers: {
@@ -138,6 +153,16 @@ export class TwitchWebhook {
         },
       }
     );
+  }
+
+  private verifySignature(
+    hubSignatureHeader: string,
+    secret: string,
+    body: Buffer
+  ) {
+    const [algorithm, signature] = hubSignatureHeader.split("=", 2);
+    const hash = createHmac(algorithm, secret).update(body).digest("hex");
+    return hash === signature;
   }
 }
 
@@ -175,3 +200,5 @@ export type WebhookStreamChangeEvent =
 export interface WebhookSubscription {
   stop(): Promise<void>;
 }
+
+type RequestWithRaw = express.Request & { rawBody: Buffer };
