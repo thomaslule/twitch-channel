@@ -104,6 +104,13 @@ export class TwitchWebhook {
       );
       return next();
     }
+    if (req.query["hub.mode"] === "denied") {
+      log.error(
+        this.twitchChannel,
+        `Webhook subscription ${subscription.id} denied: ${req.query["hub.reason"]}`
+      );
+      return res.sendStatus(200);
+    }
     res.send(req.query["hub.challenge"]).end();
   }
 
