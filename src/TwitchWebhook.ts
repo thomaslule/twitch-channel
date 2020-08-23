@@ -3,8 +3,9 @@ import { json } from "body-parser";
 import { createHmac, randomBytes } from "crypto";
 import * as express from "express";
 import { Server } from "http";
-import * as morgan from "morgan";
 import TwitchClient from "twitch";
+import { log } from "./log";
+import { TwitchChannel } from "./TwitchChannel";
 
 const LEASE_SECONDS = 600;
 
@@ -14,7 +15,10 @@ export class TwitchWebhook {
   private server?: Server;
   private subscriptions: Subscription[] = [];
 
-  constructor(private config: WebhookConfig) {
+  constructor(
+    private twitchChannel: TwitchChannel,
+    private config: WebhookConfig
+  ) {
     this.twitchClient = TwitchClient.withClientCredentials(
       this.config.client_id,
       this.config.client_secret
@@ -50,6 +54,7 @@ export class TwitchWebhook {
   ): Promise<WebhookSubscription> {
     return this.subscribeTo(
       `users/follows?first=1&to_id=${channelId}`,
+      `users_follows_${channelId}`,
       callback
     );
   }
@@ -58,12 +63,24 @@ export class TwitchWebhook {
     channelId: string,
     callback: (streamChangeEvent: WebhookStreamChangeEvent) => void
   ): Promise<WebhookSubscription> {
-    return this.subscribeTo(`streams?user_id=${channelId}`, callback);
+    return this.subscribeTo(
+      `streams?user_id=${channelId}`,
+      `streams_${channelId}`,
+      callback
+    );
   }
 
   private setupExpress() {
     const app = express();
-    app.use(morgan("tiny"));
+    app.use((req, res, next) => {
+      res.on("finish", () => {
+        log.debug(
+          this.twitchChannel,
+          `Received request on webhook endpoint: ${req.method} ${req.originalUrl} - ${res.statusCode}`
+        );
+      });
+      next();
+    });
     app.use(
       json({
         verify: (req: RequestWithRaw, res, buf) => {
@@ -81,6 +98,10 @@ export class TwitchWebhook {
   ) {
     const subscription = this.getSubscription(req.params.id);
     if (!subscription) {
+      log.debug(
+        this.twitchChannel,
+        `Received a GET for an unknown subscription: ${req.params.id}`
+      );
       return next();
     }
     res.send(req.query["hub.challenge"]).end();
@@ -93,9 +114,17 @@ export class TwitchWebhook {
   ) {
     const subscription = this.getSubscription(req.params.id);
     if (!subscription) {
+      log.debug(
+        this.twitchChannel,
+        `Received a POST for an unknown subscription: ${req.params.id}`
+      );
       return next();
     }
     if (!this.verifySignature(req as RequestWithRaw, subscription.secret)) {
+      log.debug(
+        this.twitchChannel,
+        `Received a POST with an invalid signature for subscription ${req.params.id}`
+      );
       return next();
     }
     res.sendStatus(200);
@@ -104,14 +133,18 @@ export class TwitchWebhook {
 
   private async subscribeTo<TEvent>(
     topic: string,
+    id: string,
     callback: (event: TEvent) => void
   ) {
-    const id = randomBytes(20).toString("hex");
     const secret = randomBytes(20).toString("hex");
     const refreshId = setTimeout(() => {
       this.removeSubscription(id);
-      this.subscribeTo(topic, callback).catch(() => {
-        console.error("could not renew");
+      this.subscribeTo(topic, id, callback).catch((err) => {
+        log.error(
+          this.twitchChannel,
+          `Could not renew webhook subscription on topic ${topic}`,
+          err
+        );
       });
     }, LEASE_SECONDS * 1000);
     const subscription: Subscription = {

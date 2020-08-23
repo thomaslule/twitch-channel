@@ -4,7 +4,7 @@ const config = require("./config");
 const channel = new TwitchChannel(config);
 
 channel.on("log", (event) => {
-  console.log(event);
+  console.log("log", event);
 });
 
 channel.on("chat", (event) => {

@@ -22,7 +22,6 @@
   "homepage": "https://github.com/thomaslule/twitch-channel#readme",
   "devDependencies": {
     "@types/express": "^4.17.7",
-    "@types/morgan": "^1.9.1",
     "@types/node": "^12.10.0",
     "@types/tmi.js": "^1.4.0",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
@@ -37,9 +36,7 @@
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "morgan": "^1.10.0",
     "tmi.js": "^1.5.0",
-    "twitch": "^4.0.7",
-    "twitch-webhooks": "^4.0.7"
+    "twitch": "^4.0.7"
   }
 }

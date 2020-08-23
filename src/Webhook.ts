@@ -21,7 +21,7 @@ export class Webhook {
         this.config.client_id,
         this.config.client_secret
       );
-      this.webhook = new TwitchWebhook(this.config);
+      this.webhook = new TwitchWebhook(this.twitchChannel, this.config);
     }
   }
 
