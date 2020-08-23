@@ -40,7 +40,7 @@ export class Webhook {
 
   public async stop() {
     if (this.activated && this.webhook) {
-      this.webhook.unlisten();
+      this.webhook.close();
       await this.followSubscription!.stop();
       await this.streamSubscription!.stop();
     }

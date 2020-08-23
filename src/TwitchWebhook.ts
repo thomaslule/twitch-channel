@@ -10,21 +10,16 @@ export class TwitchWebhook {
   private twitchClient: TwitchClient;
   private app: express.Application;
   private server?: Server;
+  private subscriptions: Subscription[] = [];
 
   constructor(private config: WebhookConfig) {
     this.twitchClient = TwitchClient.withClientCredentials(
       this.config.client_id,
       this.config.client_secret
     );
-    this.app = express();
-    this.app.use(morgan("tiny"));
-    this.app.use(
-      json({
-        verify: (req: RequestWithRaw, res, buf) => {
-          req.rawBody = buf;
-        },
-      })
-    );
+    this.app = this.setupExpress();
+    this.app.get("/:id", (...args) => this.getMiddleware(...args));
+    this.app.post("/:id", (...args) => this.postMiddleware(...args));
   }
 
   public async listen() {
@@ -33,18 +28,18 @@ export class TwitchWebhook {
     });
   }
 
-  public async unlisten() {
-    await new Promise((resolve, reject) => {
-      if (this.server) {
-        this.server.close((err) => {
+  public async close() {
+    if (this.server) {
+      await new Promise((resolve, reject) => {
+        this.server!.close((err) => {
           if (err) {
             reject(err);
           } else {
             resolve();
           }
         });
-      }
-    });
+      });
+    }
   }
 
   public async subscribeToFollowsToUser(
@@ -53,7 +48,6 @@ export class TwitchWebhook {
   ): Promise<WebhookSubscription> {
     return this.subscribeTo(
       `users/follows?first=1&to_id=${channelId}`,
-      `users/follows/${channelId}`,
       callback
     );
   }
@@ -62,89 +56,87 @@ export class TwitchWebhook {
     channelId: string,
     callback: (streamChangeEvent: WebhookStreamChangeEvent) => void
   ): Promise<WebhookSubscription> {
-    return this.subscribeTo(
-      `streams?user_id=${channelId}`,
-      `streams/${channelId}`,
-      callback
+    return this.subscribeTo(`streams?user_id=${channelId}`, callback);
+  }
+
+  private setupExpress() {
+    const app = express();
+    app.use(morgan("tiny"));
+    app.use(
+      json({
+        verify: (req: RequestWithRaw, res, buf) => {
+          req.rawBody = buf;
+        },
+      })
     );
+    return app;
+  }
+
+  private getMiddleware(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const subscription = this.getSubscription(req.params.id);
+    if (!subscription) {
+      return next();
+    }
+    res.send(req.query["hub.challenge"]).end();
+  }
+
+  private postMiddleware(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const subscription = this.getSubscription(req.params.id);
+    if (!subscription) {
+      return next();
+    }
+    if (!this.verifySignature(req as RequestWithRaw, subscription.secret)) {
+      return next();
+    }
+    res.sendStatus(200);
+    subscription.callback(req.body.data[0]);
   }
 
   private async subscribeTo<TEvent>(
     topic: string,
-    callbackPath: string,
     callback: (event: TEvent) => void
   ) {
-    const subscription = { active: true };
+    const id = randomBytes(20).toString("hex");
     const secret = randomBytes(20).toString("hex");
+    const subscription: Subscription = { id, topic, secret, callback };
+    this.addSubscription(subscription);
     try {
-      this.registerMiddleware(callbackPath, callback, subscription, secret);
-      await this.sendSubscriptionRequest(
-        "subscribe",
-        callbackPath,
-        topic,
-        secret
-      );
-      const stop = async () => {
-        subscription.active = false;
-        await this.sendSubscriptionRequest(
-          "unsubscribe",
-          callbackPath,
-          topic,
-          secret
-        );
-      };
-      return { stop };
+      await this.sendSubscriptionRequest("subscribe", subscription);
     } catch (err) {
-      subscription.active = false;
+      this.removeSubscription(id);
       throw err;
     }
+    return { stop: this.createStopSubscriptionFunction(subscription) };
   }
 
-  private async registerMiddleware<TEvent>(
-    callbackPath: string,
-    callback: (event: TEvent) => void,
-    subscription: { active: boolean },
-    secret: string
-  ) {
-    this.app.get(`/${callbackPath}`, (req, res, next) => {
-      if (subscription.active) {
-        res.send(req.query["hub.challenge"]).end();
-      } else {
-        next();
-      }
-    });
-    this.app.post(`/${callbackPath}`, (req, res, next) => {
-      if (
-        subscription.active &&
-        this.verifySignature(
-          req.get("X-Hub-Signature")!,
-          secret,
-          (req as RequestWithRaw).rawBody
-        )
-      ) {
-        res.sendStatus(200);
-        callback(req.body.data[0]);
-      } else {
-        next();
-      }
-    });
+  private createStopSubscriptionFunction(subscription: Subscription) {
+    return async () => {
+      this.removeSubscription(subscription.id);
+      await this.sendSubscriptionRequest("unsubscribe", subscription);
+    };
   }
 
   private async sendSubscriptionRequest(
     mode: "subscribe" | "unsubscribe",
-    callbackPath: string,
-    topic: string,
-    secret: string
+    subscription: Subscription
   ) {
     const token = await this.twitchClient.getAccessToken();
     await axios.post(
       "https://api.twitch.tv/helix/webhooks/hub",
       {
-        "hub.callback": `${this.config.callback_url}/${callbackPath}`,
+        "hub.callback": `${this.config.callback_url}/${subscription.id}`,
         "hub.mode": mode,
-        "hub.topic": `https://api.twitch.tv/helix/${topic}`,
+        "hub.topic": `https://api.twitch.tv/helix/${subscription.topic}`,
         "hub.lease_seconds": 600,
-        "hub.secret": secret,
+        "hub.secret": subscription.secret,
       },
       {
         headers: {
@@ -155,14 +147,28 @@ export class TwitchWebhook {
     );
   }
 
-  private verifySignature(
-    hubSignatureHeader: string,
-    secret: string,
-    body: Buffer
-  ) {
-    const [algorithm, signature] = hubSignatureHeader.split("=", 2);
-    const hash = createHmac(algorithm, secret).update(body).digest("hex");
+  private verifySignature(req: RequestWithRaw, secret: string) {
+    const xHubSignature = req.get("X-Hub-Signature");
+    if (!xHubSignature) {
+      return false;
+    }
+    const [algorithm, signature] = xHubSignature.split("=", 2);
+    const hash = createHmac(algorithm, secret)
+      .update(req.rawBody)
+      .digest("hex");
     return hash === signature;
+  }
+
+  private addSubscription(subscription: Subscription) {
+    this.subscriptions.push(subscription);
+  }
+
+  private getSubscription(id: string) {
+    return this.subscriptions.find((sub) => sub.id === id);
+  }
+
+  private removeSubscription(id: string) {
+    this.subscriptions = this.subscriptions.filter((sub) => sub.id !== id);
   }
 }
 
@@ -202,3 +208,10 @@ export interface WebhookSubscription {
 }
 
 type RequestWithRaw = express.Request & { rawBody: Buffer };
+
+interface Subscription {
+  id: string;
+  topic: string;
+  secret: string;
+  callback: (event: any) => void;
+}
