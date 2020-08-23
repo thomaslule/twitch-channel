@@ -6,6 +6,8 @@ import { Server } from "http";
 import * as morgan from "morgan";
 import TwitchClient from "twitch";
 
+const LEASE_SECONDS = 600;
+
 export class TwitchWebhook {
   private twitchClient: TwitchClient;
   private app: express.Application;
@@ -106,11 +108,24 @@ export class TwitchWebhook {
   ) {
     const id = randomBytes(20).toString("hex");
     const secret = randomBytes(20).toString("hex");
-    const subscription: Subscription = { id, topic, secret, callback };
+    const refreshId = setTimeout(() => {
+      this.removeSubscription(id);
+      this.subscribeTo(topic, callback).catch(() => {
+        console.error("could not renew");
+      });
+    }, LEASE_SECONDS * 1000);
+    const subscription: Subscription = {
+      id,
+      topic,
+      secret,
+      callback,
+      refreshId,
+    };
     this.addSubscription(subscription);
     try {
       await this.sendSubscriptionRequest("subscribe", subscription);
     } catch (err) {
+      clearTimeout(refreshId);
       this.removeSubscription(id);
       throw err;
     }
@@ -119,6 +134,7 @@ export class TwitchWebhook {
 
   private createStopSubscriptionFunction(subscription: Subscription) {
     return async () => {
+      clearTimeout(subscription.refreshId);
       this.removeSubscription(subscription.id);
       await this.sendSubscriptionRequest("unsubscribe", subscription);
     };
@@ -135,7 +151,7 @@ export class TwitchWebhook {
         "hub.callback": `${this.config.callback_url}/${subscription.id}`,
         "hub.mode": mode,
         "hub.topic": `https://api.twitch.tv/helix/${subscription.topic}`,
-        "hub.lease_seconds": 600,
+        "hub.lease_seconds": LEASE_SECONDS,
         "hub.secret": subscription.secret,
       },
       {
@@ -214,4 +230,5 @@ interface Subscription {
   topic: string;
   secret: string;
   callback: (event: any) => void;
+  refreshId: NodeJS.Timeout;
 }
