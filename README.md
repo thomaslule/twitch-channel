@@ -10,7 +10,6 @@ The event objects are kept simple and without surprises. Every viewer-related ev
 - [Config options](#config-options)
   - [Mandatory config](#mandatory-config)
   - [IRC config](#irc-config)
-  - [Broadcaster IRC config](#broadcaster-irc-config)
   - [Webhook config](#webhook-config)
 - [Events](#events)
   - [`log`](#log)
@@ -70,12 +69,6 @@ await channel.connect();
 
 Optional config used for events:
 
-- chat
-- cheer
-- sub
-- resub
-- subgift
-- raid
 - ban (emitted only if the bot is a moderator)
 - host (emitted only if the bot is the broadcaster)
 
@@ -171,6 +164,8 @@ Optional config used for events:
 
 ### `host`
 
+Emitted only if the broadcaster account was connected with the [IRC config](#irc-config).
+
 ```typescript
 {
   viewerId: string;
@@ -192,6 +187,8 @@ Optional config used for events:
 
 ### `ban`
 
+Emitted only if a moderator account was connected with the [IRC config](#irc-config).
+
 ```typescript
 {
   viewerId: string;
@@ -200,6 +197,8 @@ Optional config used for events:
 ```
 
 ### `follow`
+
+Emitted only if a [webhook config](#webhook-config) was provided.
 
 ```typescript
 {
@@ -210,6 +209,8 @@ Optional config used for events:
 
 ### `stream-begin`
 
+Emitted only if a [webhook config](#webhook-config) was provided.
+
 ```typescript
 {
   game: string;
@@ -218,6 +219,8 @@ Optional config used for events:
 
 ### `stream-change-game`
 
+Emitted only if a [webhook config](#webhook-config) was provided.
+
 ```typescript
 {
   game: string;
@@ -225,6 +228,8 @@ Optional config used for events:
 ```
 
 ### `stream-end`
+
+Emitted only if a [webhook config](#webhook-config) was provided.
 
 ```typescript
 {
@@ -244,7 +249,7 @@ TwichChannel is an [EventEmitter](https://nodejs.org/api/events.html#events_clas
 ## Upgrade from v0 to v1
 
 - we dont use streamlabs anymore, the `streamlabs/donation` event wont fire and the `streamlabs_socket_token` and `is_test` properties have been removed
-- to catch the `host` event, you must now provide the `broadcaster_bot_token` config
+- to catch the `host` event, you must now setup the broadcaster as the IRC bot
 - the `host` event is now also fired with auto-hosts, it has a new `autohost` boolean property
 - the `say` and `getTopClipper` functions have been removed
 - the `error`, `info` and `debug` events are replaced by a `log` event (which has a new `warn` level)
