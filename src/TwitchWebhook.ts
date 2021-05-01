@@ -3,14 +3,15 @@ import { json } from "body-parser";
 import { createHmac, randomBytes } from "crypto";
 import * as express from "express";
 import { Server } from "http";
-import TwitchClient from "twitch";
+import { ApiClient } from "twitch";
+import { ClientCredentialsAuthProvider } from "twitch-auth";
 import { log } from "./log";
 import { TwitchChannel } from "./TwitchChannel";
 
 const LEASE_SECONDS = 600;
 
 export class TwitchWebhook {
-  private twitchClient: TwitchClient;
+  private twitchClient: ApiClient;
   private app: express.Application;
   private server?: Server;
   private subscriptions: Subscription[] = [];
@@ -19,10 +20,11 @@ export class TwitchWebhook {
     private twitchChannel: TwitchChannel,
     private config: WebhookConfig
   ) {
-    this.twitchClient = TwitchClient.withClientCredentials(
-      this.config.client_id,
-      this.config.client_secret
+    const authProvider = new ClientCredentialsAuthProvider(
+      config.client_id,
+      config.client_secret
     );
+    this.twitchClient = new ApiClient({ authProvider });
     this.app = this.setupExpress();
     this.app.get("/:id", (...args) => this.getMiddleware(...args));
     this.app.post("/:id", (...args) => this.postMiddleware(...args));
@@ -41,7 +43,7 @@ export class TwitchWebhook {
           if (err) {
             reject(err);
           } else {
-            resolve();
+            resolve(undefined);
           }
         });
       });

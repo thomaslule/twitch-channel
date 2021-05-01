@@ -1,4 +1,5 @@
-import TwitchClient from "twitch";
+import { ApiClient } from "twitch";
+import { ClientCredentialsAuthProvider } from "twitch-auth";
 import { Config } from "./Config";
 import { log } from "./log";
 import { TwitchChannel } from "./TwitchChannel";
@@ -7,7 +8,7 @@ import { TwitchWebhook, WebhookSubscription } from "./TwitchWebhook";
 export class Webhook {
   private activated: boolean;
   private config!: WebhookConfig;
-  private twitchClient!: TwitchClient;
+  private twitchClient!: ApiClient;
   private webhook!: TwitchWebhook;
   private lastGame: string | undefined;
   private followSubscription?: WebhookSubscription;
@@ -17,10 +18,11 @@ export class Webhook {
     this.activated = config.callback_url !== undefined;
     if (this.activated) {
       this.config = config as WebhookConfig;
-      this.twitchClient = TwitchClient.withClientCredentials(
-        this.config.client_id,
-        this.config.client_secret
+      const authProvider = new ClientCredentialsAuthProvider(
+        config.client_id,
+        config.client_secret
       );
+      this.twitchClient = new ApiClient({ authProvider });
       this.webhook = new TwitchWebhook(this.twitchChannel, this.config);
     }
   }
