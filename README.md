@@ -77,23 +77,12 @@ Optional config used for events:
 - subgift
 - raid
 - ban (emitted only if the bot is a moderator)
+- host (emitted only if the bot is the broadcaster)
 
 | Config name | Type   | Description                                        |
 | ----------- | ------ | -------------------------------------------------- |
 | bot_name    | string | twitch bot login                                   |
 | bot_token   | string | create your token here https://twitchapps.com/tmi/ |
-
-### Broadcaster IRC config
-
-If you want to catch the `host` event, you must provide a token from the broadcaster account.
-
-Optional config used for events:
-
-- host
-
-| Config name           | Type   | Description                                                                      |
-| --------------------- | ------ | -------------------------------------------------------------------------------- |
-| broadcaster_bot_token | string | create your token here https://twitchapps.com/tmi/ (use the broadcaster account) |
 
 ### Webhook config
 

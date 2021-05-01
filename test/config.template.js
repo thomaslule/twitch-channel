@@ -4,7 +4,6 @@ module.exports = {
   client_secret: "",
   bot_name: "",
   bot_token: "",
-  broadcaster_bot_token: "",
   callback_url: "http://your_ip:8080/",
   port: 8080,
 };

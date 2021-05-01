@@ -19,7 +19,6 @@ export interface MandatoryConfig {
 export interface OptionalConfig {
   bot_name: string;
   bot_token: string;
-  broadcaster_bot_token: string;
   callback_url: string;
   port: number;
 }

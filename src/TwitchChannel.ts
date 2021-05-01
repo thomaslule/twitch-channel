@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { BroadcasterChatBot } from "./BroadcasterChatBot";
 import { ChatBot } from "./ChatBot";
 import {
   Config,
@@ -14,7 +13,6 @@ export class TwitchChannel extends EventEmitter {
   private config: Config;
   private webhook: Webhook;
   private chatBot: ChatBot;
-  private broadcasterChatBot: BroadcasterChatBot;
 
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
     super();
@@ -24,7 +22,6 @@ export class TwitchChannel extends EventEmitter {
     this.config = getWithDefault(opts);
     this.webhook = new Webhook(this, this.config);
     this.chatBot = new ChatBot(this, this.config);
-    this.broadcasterChatBot = new BroadcasterChatBot(this, this.config);
   }
 
   public on(
@@ -125,18 +122,10 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    await Promise.all([
-      this.chatBot.connect(),
-      this.broadcasterChatBot.connect(),
-      this.webhook.start(),
-    ]);
+    await Promise.all([this.chatBot.connect(), this.webhook.start()]);
   }
 
   public async disconnect() {
-    await Promise.all([
-      this.chatBot.disconnect(),
-      this.broadcasterChatBot.disconnect(),
-      this.webhook.stop(),
-    ]);
+    await Promise.all([this.chatBot.disconnect(), this.webhook.stop()]);
   }
 }

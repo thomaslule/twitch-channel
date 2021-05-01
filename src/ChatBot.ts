@@ -228,6 +228,31 @@ export class ChatBot {
           );
         }
       });
+
+      this.bot.on("hosted", async (channel, username, viewers, autohost) => {
+        try {
+          const viewer = await getTwitchUserByName(this.config, username);
+          if (!viewer) {
+            throw new Error(
+              `host: couldnt get the twitch viewer named ${username}`
+            );
+          }
+          const viewerId = viewer.id;
+          const viewerName = viewer.displayName;
+          twitchChannel.emit("host", {
+            viewerId,
+            viewerName,
+            viewers,
+            autohost,
+          });
+        } catch (error) {
+          log.error(
+            twitchChannel,
+            "an error happened during a host event",
+            error
+          );
+        }
+      });
     }
   }
 
