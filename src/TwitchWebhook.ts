@@ -3,7 +3,6 @@ import { json } from "body-parser";
 import { createHmac, randomBytes } from "crypto";
 import * as express from "express";
 import { Server } from "http";
-import { ApiClient } from "twitch";
 import { ClientCredentialsAuthProvider } from "twitch-auth";
 import { log } from "./log";
 import { TwitchChannel } from "./TwitchChannel";
@@ -11,20 +10,15 @@ import { TwitchChannel } from "./TwitchChannel";
 const LEASE_SECONDS = 600;
 
 export class TwitchWebhook {
-  private twitchClient: ApiClient;
   private app: express.Application;
   private server?: Server;
   private subscriptions: Subscription[] = [];
 
   constructor(
     private twitchChannel: TwitchChannel,
-    private config: WebhookConfig
+    private config: WebhookConfig,
+    private authProvider: ClientCredentialsAuthProvider
   ) {
-    const authProvider = new ClientCredentialsAuthProvider(
-      config.client_id,
-      config.client_secret
-    );
-    this.twitchClient = new ApiClient({ authProvider });
     this.app = this.setupExpress();
     this.app.get("/:id", (...args) => this.getMiddleware(...args));
     this.app.post("/:id", (...args) => this.postMiddleware(...args));
@@ -186,7 +180,7 @@ export class TwitchWebhook {
     mode: "subscribe" | "unsubscribe",
     subscription: Subscription
   ) {
-    const token = await this.twitchClient.getAccessToken();
+    const token = await this.authProvider.getAccessToken();
     await axios.post(
       "https://api.twitch.tv/helix/webhooks/hub",
       {

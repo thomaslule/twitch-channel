@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import { ApiClient } from "twitch";
+import { ClientCredentialsAuthProvider } from "twitch-auth";
 import { ChatBot } from "./ChatBot";
 import {
   Config,
@@ -20,8 +22,14 @@ export class TwitchChannel extends EventEmitter {
       log.error(this, "an uncaught error happened in a listener", error);
     });
     this.config = getWithDefault(opts);
-    this.webhook = new Webhook(this, this.config);
-    this.chatBot = new ChatBot(this, this.config);
+
+    const authProvider = new ClientCredentialsAuthProvider(
+      this.config.client_id,
+      this.config.client_secret
+    );
+    const apiClient = new ApiClient({ authProvider });
+    this.webhook = new Webhook(this, this.config, apiClient, authProvider);
+    this.chatBot = new ChatBot(this, this.config, apiClient);
   }
 
   public on(

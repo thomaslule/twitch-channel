@@ -8,28 +8,31 @@ import { TwitchWebhook, WebhookSubscription } from "./TwitchWebhook";
 export class Webhook {
   private activated: boolean;
   private config!: WebhookConfig;
-  private twitchClient!: ApiClient;
   private webhook!: TwitchWebhook;
   private lastGame: string | undefined;
   private followSubscription?: WebhookSubscription;
   private streamSubscription?: WebhookSubscription;
 
-  constructor(private twitchChannel: TwitchChannel, config: Config) {
+  constructor(
+    private twitchChannel: TwitchChannel,
+    config: Config,
+    private apiClient: ApiClient,
+    authProvider: ClientCredentialsAuthProvider
+  ) {
     this.activated = config.callback_url !== undefined;
     if (this.activated) {
       this.config = config as WebhookConfig;
-      const authProvider = new ClientCredentialsAuthProvider(
-        config.client_id,
-        config.client_secret
+      this.webhook = new TwitchWebhook(
+        this.twitchChannel,
+        this.config,
+        authProvider
       );
-      this.twitchClient = new ApiClient({ authProvider });
-      this.webhook = new TwitchWebhook(this.twitchChannel, this.config);
     }
   }
 
   public async start() {
     if (this.activated) {
-      const stream = await this.twitchClient.helix.streams.getStreamByUserName(
+      const stream = await this.apiClient.helix.streams.getStreamByUserName(
         this.config.channel
       );
       this.lastGame = stream
@@ -50,7 +53,7 @@ export class Webhook {
 
   private async subscribe() {
     try {
-      const channel = await this.twitchClient.helix.users.getUserByName(
+      const channel = await this.apiClient.helix.users.getUserByName(
         this.config.channel
       );
       if (!channel) {
@@ -110,7 +113,7 @@ export class Webhook {
   }
 
   private async getGameName(gameId: string) {
-    const game = await this.twitchClient.helix.games.getGameById(gameId);
+    const game = await this.apiClient.helix.games.getGameById(gameId);
     // in some cases, twitch doesnt find the game
     return game ? game.name : "";
   }
