@@ -13,7 +13,7 @@ import { Webhook } from "./Webhook";
 
 export class TwitchChannel extends EventEmitter {
   private config: Config;
-  private webhook: Webhook;
+  private webhook?: Webhook;
   private chatBot: ChatBot;
 
   constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
@@ -28,7 +28,9 @@ export class TwitchChannel extends EventEmitter {
       this.config.client_secret
     );
     const apiClient = new ApiClient({ authProvider });
-    this.webhook = new Webhook(this, this.config, apiClient, authProvider);
+    if (Webhook.hasRequiredConfig(this.config)) {
+      this.webhook = new Webhook(this, this.config, apiClient, authProvider);
+    }
     this.chatBot = new ChatBot(this, this.config, apiClient);
   }
 
@@ -130,10 +132,10 @@ export class TwitchChannel extends EventEmitter {
   }
 
   public async connect() {
-    await Promise.all([this.chatBot.connect(), this.webhook.start()]);
+    await Promise.all([this.chatBot.connect(), this.webhook?.start()]);
   }
 
   public async disconnect() {
-    await Promise.all([this.chatBot.disconnect(), this.webhook.stop()]);
+    await Promise.all([this.chatBot.disconnect(), this.webhook?.stop()]);
   }
 }

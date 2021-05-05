@@ -6,12 +6,15 @@ import { TwitchChannel } from "./TwitchChannel";
 import { TwitchWebhook, WebhookSubscription } from "./TwitchWebhook";
 
 export class Webhook {
-  private activated: boolean;
-  private config!: WebhookConfig;
-  private webhook!: TwitchWebhook;
+  private config: WebhookConfig;
+  private webhook: TwitchWebhook;
   private lastGame: string | undefined;
   private followSubscription?: WebhookSubscription;
   private streamSubscription?: WebhookSubscription;
+
+  public static hasRequiredConfig(config: Config): boolean {
+    return config.callback_url !== undefined;
+  }
 
   constructor(
     private twitchChannel: TwitchChannel,
@@ -19,32 +22,25 @@ export class Webhook {
     private apiClient: ApiClient,
     authProvider: ClientCredentialsAuthProvider
   ) {
-    this.activated = config.callback_url !== undefined;
-    if (this.activated) {
-      this.config = config as WebhookConfig;
-      this.webhook = new TwitchWebhook(
-        this.twitchChannel,
-        this.config,
-        authProvider
-      );
-    }
+    this.config = config as WebhookConfig;
+    this.webhook = new TwitchWebhook(
+      this.twitchChannel,
+      this.config,
+      authProvider
+    );
   }
 
   public async start() {
-    if (this.activated) {
-      const stream = await this.apiClient.helix.streams.getStreamByUserName(
-        this.config.channel
-      );
-      this.lastGame = stream
-        ? await this.getGameName(stream.gameId)
-        : undefined;
-      this.webhook.listen();
-      await this.subscribe();
-    }
+    const stream = await this.apiClient.helix.streams.getStreamByUserName(
+      this.config.channel
+    );
+    this.lastGame = stream ? await this.getGameName(stream.gameId) : undefined;
+    this.webhook.listen();
+    await this.subscribe();
   }
 
   public async stop() {
-    if (this.activated && this.webhook) {
+    if (this.webhook) {
       this.webhook.close();
       await this.followSubscription!.stop();
       await this.streamSubscription!.stop();
