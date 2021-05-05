@@ -2,26 +2,19 @@ import { EventEmitter } from "events";
 import { ApiClient } from "twitch";
 import { ClientCredentialsAuthProvider } from "twitch-auth";
 import { ChatBot } from "./ChatBot";
-import {
-  Config,
-  getWithDefault,
-  MandatoryConfig,
-  OptionalConfig,
-} from "./Config";
+import { Config } from "./Config";
 import { log } from "./log";
 import { Webhook } from "./Webhook";
 
 export class TwitchChannel extends EventEmitter {
-  private config: Config;
   private webhook?: Webhook;
   private chatBot: ChatBot;
 
-  constructor(opts: MandatoryConfig & Partial<OptionalConfig>) {
+  constructor(private config: Config) {
     super();
     this.on("error", (error) => {
       log.error(this, "an uncaught error happened in a listener", error);
     });
-    this.config = getWithDefault(opts);
 
     const authProvider = new ClientCredentialsAuthProvider(
       this.config.client_id,
@@ -129,6 +122,13 @@ export class TwitchChannel extends EventEmitter {
   public on(event: string | symbol, handler: (...args: any[]) => void): this {
     super.on(event, handler);
     return this;
+  }
+
+  public getMiddleware() {
+    if (!this.webhook) {
+      throw new Error("Cannot get middleware: webhook config not provided");
+    }
+    return this.webhook.getMiddleware();
   }
 
   public async connect() {

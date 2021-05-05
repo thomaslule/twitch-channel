@@ -30,12 +30,18 @@ export class Webhook {
     );
   }
 
+  public getMiddleware() {
+    return this.webhook.getMiddleware();
+  }
+
   public async start() {
     const stream = await this.apiClient.helix.streams.getStreamByUserName(
       this.config.channel
     );
     this.lastGame = stream ? await this.getGameName(stream.gameId) : undefined;
-    this.webhook.listen();
+    if (this.config.port) {
+      this.webhook.listen();
+    }
     await this.subscribe();
   }
 

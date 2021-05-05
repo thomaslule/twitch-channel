@@ -1,14 +1,8 @@
-const defaultConfig = {
-  port: 80,
-};
-
 export function getWithDefault(config: MandatoryConfig): Config {
-  return { ...defaultConfig, ...config };
+  return { ...config };
 }
 
-export interface Config extends MandatoryConfig, Partial<OptionalConfig> {
-  port: number;
-}
+export type Config = MandatoryConfig & Partial<OptionalConfig>;
 
 export interface MandatoryConfig {
   channel: string;

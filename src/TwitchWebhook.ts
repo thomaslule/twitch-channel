@@ -10,7 +10,7 @@ import { TwitchChannel } from "./TwitchChannel";
 const LEASE_SECONDS = 600;
 
 export class TwitchWebhook {
-  private app: express.Application;
+  private router: express.Router;
   private server?: Server;
   private subscriptions: Subscription[] = [];
 
@@ -19,14 +19,23 @@ export class TwitchWebhook {
     private config: WebhookConfig,
     private authProvider: ClientCredentialsAuthProvider
   ) {
-    this.app = this.setupExpress();
-    this.app.get("/:id", (...args) => this.getMiddleware(...args));
-    this.app.post("/:id", (...args) => this.postMiddleware(...args));
+    this.router = this.setupExpress();
+    this.router.get("/:id", (...args) => this.getGETMiddleware(...args));
+    this.router.post("/:id", (...args) => this.getPOSTMiddleware(...args));
+  }
+
+  public getMiddleware() {
+    return this.router as express.RequestHandler;
   }
 
   public async listen() {
-    await new Promise((resolve) => {
-      this.server = this.app.listen(this.config.port, resolve);
+    await new Promise((resolve, reject) => {
+      if (!this.config.port) {
+        reject(new Error("Cannot listen, port not provided"));
+      }
+      const app = express();
+      app.use(this.router);
+      this.server = app.listen(this.config.port!, resolve);
     });
   }
 
@@ -67,7 +76,7 @@ export class TwitchWebhook {
   }
 
   private setupExpress() {
-    const app = express();
+    const app = express.Router();
     app.use((req, res, next) => {
       res.on("finish", () => {
         log.debug(
@@ -87,7 +96,7 @@ export class TwitchWebhook {
     return app;
   }
 
-  private getMiddleware(
+  private getGETMiddleware(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
@@ -110,7 +119,7 @@ export class TwitchWebhook {
     res.send(req.query["hub.challenge"]).end();
   }
 
-  private postMiddleware(
+  private getPOSTMiddleware(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
@@ -227,8 +236,8 @@ export class TwitchWebhook {
 export interface WebhookConfig {
   client_id: string;
   client_secret: string;
-  port: number;
   callback_url: string;
+  port?: number;
 }
 
 export interface WebhookFollowEvent {

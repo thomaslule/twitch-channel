@@ -86,10 +86,10 @@ Optional config used for events:
 - stream-change-game
 - stream-end
 
-| Config name  | Type   | Description                                      |
-| ------------ | ------ | ------------------------------------------------ |
-| callback_url | string | url to your server, accessible from the internet |
-| port         | string | defaults to 80, the lib will listen to this port |
+| Config name  | Type   | Description                                                                                                             |
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------- |
+| callback_url | string | url to your server, accessible from the internet                                                                        |
+| port         | string | if provided, the lib will listen to this port for webhook requests (otherwise you can use the `getMiddleware()` method) |
 
 ## Events
 
@@ -240,6 +240,8 @@ Emitted only if a [webhook config](#webhook-config) was provided.
 
 ```javascript
 await channel.connect();
+
+channel.getMiddleware();
 
 await channel.disconnect();
 ```
