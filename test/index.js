@@ -48,3 +48,11 @@ channel.on("stream-end", (event) => {
 // });
 
 channel.connect();
+
+process.on("SIGTERM", () => {
+  channel.disconnect().finally(() => process.exit(0));
+});
+
+process.on("SIGINT", () => {
+  channel.disconnect().finally(() => process.exit(0));
+});

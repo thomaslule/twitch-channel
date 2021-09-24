@@ -2,6 +2,7 @@ import { ApiClient } from "@twurple/api";
 import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import { EventEmitter } from "events";
 import { ChatBot } from "./chat-bot";
+import { EventSub } from "./event-sub";
 import { getWithDefault, MandatoryOptions, Options } from "./options";
 import { Streamlabs } from "./streamlabs";
 
@@ -9,6 +10,7 @@ export class TwitchChannel extends EventEmitter {
   private options: Options;
   private chatBot: ChatBot;
   private streamlabs?: Streamlabs;
+  private eventSub: EventSub;
   private apiClient: ApiClient;
 
   constructor(opts: MandatoryOptions & Partial<Options>) {
@@ -23,6 +25,7 @@ export class TwitchChannel extends EventEmitter {
       this.options.client_secret
     );
     this.apiClient = new ApiClient({ authProvider });
+    this.eventSub = new EventSub(this, this.options, this.apiClient);
   }
 
   public on(event: "debug", handler: (param: string) => void): this;
@@ -131,6 +134,7 @@ export class TwitchChannel extends EventEmitter {
       this.streamlabs!.start();
     }
     await this.chatBot.connect();
+    await this.eventSub.start();
   }
 
   public async disconnect() {
@@ -138,6 +142,7 @@ export class TwitchChannel extends EventEmitter {
       this.streamlabs!.stop();
     }
     await this.chatBot.disconnect();
+    await this.eventSub.stop();
   }
 
   public say(message: string) {
