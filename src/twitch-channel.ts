@@ -1,5 +1,6 @@
+import { ApiClient } from "@twurple/api";
+import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import { EventEmitter } from "events";
-import TwitchClient from "twitch";
 import { ChatBot } from "./chat-bot";
 import { getWithDefault, MandatoryOptions, Options } from "./options";
 import { Streamlabs } from "./streamlabs";
@@ -8,7 +9,7 @@ export class TwitchChannel extends EventEmitter {
   private options: Options;
   private chatBot: ChatBot;
   private streamlabs?: Streamlabs;
-  private twitchClient: TwitchClient;
+  private apiClient: ApiClient;
 
   constructor(opts: MandatoryOptions & Partial<Options>) {
     super();
@@ -17,10 +18,11 @@ export class TwitchChannel extends EventEmitter {
     this.streamlabs = this.options.streamlabs_socket_token
       ? new Streamlabs(this, this.options)
       : undefined;
-    this.twitchClient = TwitchClient.withClientCredentials(
+    const authProvider = new ClientCredentialsAuthProvider(
       this.options.client_id,
       this.options.client_secret
     );
+    this.apiClient = new ApiClient({ authProvider });
   }
 
   public on(event: "debug", handler: (param: string) => void): this;
@@ -148,7 +150,7 @@ export class TwitchChannel extends EventEmitter {
       .toLowerCase()
       .replace(/ /g, "_")
       .replace(/[^a-z0-9_]/g, "");
-    const twitchUser = await this.twitchClient.helix.users.getUserByName(login);
+    const twitchUser = await this.apiClient.helix.users.getUserByName(login);
     return twitchUser ? twitchUser : undefined;
   }
 
@@ -161,7 +163,7 @@ export class TwitchChannel extends EventEmitter {
     if (channel === undefined) {
       throw new Error(`channel ${this.options.channel} in options not found`);
     }
-    const res = await this.twitchClient.helix.clips.getClipsForBroadcaster(
+    const res = await this.apiClient.helix.clips.getClipsForBroadcaster(
       channel.id,
       { startDate: lastWeek, endDate: now }
     );
