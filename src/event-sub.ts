@@ -2,6 +2,7 @@ import { ApiClient } from "@twurple/api";
 import {
   EventSubChannelFollowEvent,
   EventSubListener,
+  EventSubStreamOnlineEvent,
   EventSubSubscription,
   ReverseProxyAdapter,
 } from "@twurple/eventsub";
@@ -42,6 +43,16 @@ export class EventSub {
         this.onFollow(event)
       )
     );
+    this.subscriptions.push(
+      await this.listener.subscribeToStreamOnlineEvents(channel, (event) =>
+        this.onOnline(event)
+      )
+    );
+    this.subscriptions.push(
+      await this.listener.subscribeToStreamOfflineEvents(channel, () =>
+        this.onOffline()
+      )
+    );
   }
 
   public async stop() {
@@ -55,5 +66,14 @@ export class EventSub {
     const viewerId = event.userId;
     const viewerName = event.userDisplayName;
     this.twitchChannel.emit("follow", { viewerId, viewerName });
+  }
+
+  private async onOnline(event: EventSubStreamOnlineEvent) {
+    const stream = await event.getStream();
+    this.twitchChannel.emit("stream-begin", { game: stream.gameName });
+  }
+
+  private onOffline() {
+    this.twitchChannel.emit("stream-end", {});
   }
 }
