@@ -3,11 +3,9 @@ import TwitchClient from "twitch";
 import { ChatBot } from "./chat-bot";
 import { getWithDefault, MandatoryOptions, Options } from "./options";
 import { Streamlabs } from "./streamlabs";
-import { Webhook } from "./webhook";
 
 export class TwitchChannel extends EventEmitter {
   private options: Options;
-  private webhook: Webhook;
   private chatBot: ChatBot;
   private streamlabs?: Streamlabs;
   private twitchClient: TwitchClient;
@@ -15,7 +13,6 @@ export class TwitchChannel extends EventEmitter {
   constructor(opts: MandatoryOptions & Partial<Options>) {
     super();
     this.options = getWithDefault(opts);
-    this.webhook = new Webhook(this, this.options);
     this.chatBot = new ChatBot(this, this.options);
     this.streamlabs = this.options.streamlabs_socket_token
       ? new Streamlabs(this, this.options)
@@ -132,7 +129,6 @@ export class TwitchChannel extends EventEmitter {
       this.streamlabs!.start();
     }
     await this.chatBot.connect();
-    await this.webhook.start();
   }
 
   public async disconnect() {
@@ -140,7 +136,6 @@ export class TwitchChannel extends EventEmitter {
       this.streamlabs!.stop();
     }
     await this.chatBot.disconnect();
-    await this.webhook.stop();
   }
 
   public say(message: string) {

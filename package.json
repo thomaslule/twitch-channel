@@ -35,7 +35,6 @@
   "dependencies": {
     "socket.io-client": "^2.1.1",
     "tmi.js": "^1.5.0",
-    "twitch": "^4.0.7",
-    "twitch-webhooks": "^4.0.7"
+    "twitch": "^4.0.7"
   }
 }
