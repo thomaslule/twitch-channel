@@ -6,9 +6,26 @@ const channel = new TwitchChannel(config);
 channel.on("log", (event) => {
   console.log("log", event);
 });
-
 channel.on("chat", (event) => {
   console.log("chat", event);
+});
+channel.on("clear-chat", (event) => {
+  console.log("clear-chat", event);
+});
+channel.on("emote-only", (event) => {
+  console.log("emote-only", event);
+});
+channel.on("followers-only", (event) => {
+  console.log("followers-only", event);
+});
+channel.on("subs-only", (event) => {
+  console.log("subs-only", event);
+});
+channel.on("slow-mode", (event) => {
+  console.log("slow-mode", event);
+});
+channel.on("message-deleted", (event) => {
+  console.log("message-deleted", event);
 });
 channel.on("cheer", (event) => {
   console.log("cheer", event);
@@ -21,6 +38,9 @@ channel.on("resub", (event) => {
 });
 channel.on("subgift", (event) => {
   console.log("subgift", event);
+});
+channel.on("hosting", (event) => {
+  console.log("hosting", event);
 });
 channel.on("host", (event) => {
   console.log("host", event);
@@ -42,6 +62,9 @@ channel.on("stream-end", (event) => {
 });
 channel.on("ban", (event) => {
   console.log("ban", event);
+});
+channel.on("timeout", (event) => {
+  console.log("timeout", event);
 });
 
 channel.connect();

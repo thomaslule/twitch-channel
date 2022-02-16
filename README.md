@@ -113,6 +113,46 @@ Optional config used for events:
 }
 ```
 
+### `clear-chat`
+
+```typescript
+{
+}
+```
+
+### `emote-only`
+
+```typescript
+{
+}
+```
+
+### `followers-only`
+
+```typescript
+{
+  enabled: boolean;
+  followAge: number; // in minutes
+}
+```
+
+### `subs-only`
+
+```typescript
+{
+  enabled: boolean;
+}
+```
+
+### `slow-mode`
+
+```typescript
+{
+  enabled: boolean;
+  interval: number; // in seconds
+}
+```
+
 ### `cheer`
 
 ```typescript
@@ -175,6 +215,26 @@ Emitted only if the broadcaster account was connected with the [IRC config](#irc
 }
 ```
 
+### `hosting`
+
+```typescript
+{
+  targetId: string;
+  targetName: string;
+  viewers: number;
+}
+```
+
+### `message-deleted`
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  deletedMessage: string;
+}
+```
+
 ### `raid`
 
 ```typescript
@@ -193,6 +253,18 @@ Emitted only if a moderator account was connected with the [IRC config](#irc-con
 {
   viewerId: string;
   viewerName: string;
+}
+```
+
+### `timeout`
+
+Emitted only if a moderator account was connected with the [IRC config](#irc-config).
+
+```typescript
+{
+  viewerId: string;
+  viewerName: string;
+  duration: number; // in seconds
 }
 ```
 

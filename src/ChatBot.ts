@@ -103,6 +103,42 @@ export class ChatBot {
       }
     });
 
+    this.bot.on("clearchat", () => {
+      try {
+        twitchChannel.emit("clear-chat", {});
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a clear-chat event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("emoteonly", () => {
+      try {
+        twitchChannel.emit("emote-only", {});
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a emote-only event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("followersonly", (channel, enabled, followAge) => {
+      try {
+        twitchChannel.emit("followers-only", { enabled, followAge });
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a followers-only event",
+          error
+        );
+      }
+    });
+
     this.bot.on("hosted", async (channel, username, viewers, autohost) => {
       try {
         const viewer = await getTwitchUserByName(username, apiClient);
@@ -123,6 +159,54 @@ export class ChatBot {
         log.error(
           twitchChannel,
           "an error happened during a host event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("hosting", async (channel, username, viewers) => {
+      try {
+        const target = await getTwitchUserByName(username, apiClient);
+        if (!target) {
+          throw new Error(
+            `host: couldnt get the twitch viewer named ${username}`
+          );
+        }
+        const targetId = target.id;
+        const targetName = target.displayName;
+        twitchChannel.emit("host", {
+          targetId,
+          targetName,
+          viewers,
+        });
+      } catch (error) {
+        log.error(
+          twitchChannel,
+          "an error happened during a hosting event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("messagedeleted", async (channel, username, deletedMessage) => {
+      try {
+        const viewer = await getTwitchUserByName(username, apiClient);
+        if (!viewer) {
+          throw new Error(
+            `host: couldnt get the twitch viewer named ${username}`
+          );
+        }
+        const viewerId = viewer.id;
+        const viewerName = viewer.displayName;
+        twitchChannel.emit("message-deleted", {
+          viewerId,
+          viewerName,
+          deletedMessage,
+        });
+      } catch (error) {
+        log.error(
+          twitchChannel,
+          "an error happened during a message-deleted event",
           error
         );
       }
@@ -229,6 +313,30 @@ export class ChatBot {
       }
     );
 
+    this.bot.on("slowmode", (channel, enabled, interval) => {
+      try {
+        twitchChannel.emit("slow-mode", { enabled, interval });
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a slow-mode event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("subscribers", (channel, enabled) => {
+      try {
+        twitchChannel.emit("subs-only", { enabled });
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a subs-only event",
+          error
+        );
+      }
+    });
+
     this.bot.on("subscription", async (channel, username, method, msg) => {
       try {
         const viewer = await getTwitchUserByName(username, apiClient);
@@ -256,6 +364,33 @@ export class ChatBot {
         );
       }
     });
+
+    this.bot.on(
+      "timeout",
+      async (channel, username, reasonDeprecated, duration) => {
+        try {
+          const viewer = await getTwitchUserByName(username, apiClient);
+          if (!viewer) {
+            throw new Error(
+              `subscription: couldnt get the twitch viewer named ${username}`
+            );
+          }
+          const viewerId = viewer.id;
+          const viewerName = viewer.displayName;
+          twitchChannel.emit("timeout", {
+            viewerId,
+            viewerName,
+            duration,
+          });
+        } catch (error) {
+          log.error(
+            this.twitchChannel,
+            "an error happened during a timeout event",
+            error
+          );
+        }
+      }
+    );
   }
 
   public async connect() {

@@ -45,6 +45,26 @@ export class TwitchChannel extends EventEmitter {
     }) => void
   ): this;
   public on(
+    event: "clear-chat",
+    handler: (param: Record<string, never>) => void
+  ): this;
+  public on(
+    event: "emote-only",
+    handler: (param: Record<string, never>) => void
+  ): this;
+  public on(
+    event: "followers-only",
+    handler: (param: { enabled: boolean; followAge: number }) => void
+  ): this;
+  public on(
+    event: "subs-only",
+    handler: (param: { enabled: boolean }) => void
+  ): this;
+  public on(
+    event: "slow-mode",
+    handler: (param: { enabled: boolean; interval: number }) => void
+  ): this;
+  public on(
     event: "cheer",
     handler: (param: {
       viewerId: string;
@@ -95,6 +115,22 @@ export class TwitchChannel extends EventEmitter {
     }) => void
   ): this;
   public on(
+    event: "hosting",
+    handler: (param: {
+      targetId: string;
+      targetName: string;
+      viewers: number;
+    }) => void
+  ): this;
+  public on(
+    event: "message-deleted",
+    handler: (param: {
+      viewerId: string;
+      viewerName: string;
+      deletedMessage: string;
+    }) => void
+  ): this;
+  public on(
     event: "raid",
     handler: (param: {
       viewerId: string;
@@ -105,6 +141,14 @@ export class TwitchChannel extends EventEmitter {
   public on(
     event: "ban",
     handler: (param: { viewerId: string; viewerName: string }) => void
+  ): this;
+  public on(
+    event: "timeout",
+    handler: (param: {
+      viewerId: string;
+      viewerName: string;
+      duration: number;
+    }) => void
   ): this;
   public on(
     event: "follow",
