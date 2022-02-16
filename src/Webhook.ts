@@ -1,5 +1,6 @@
-import { ApiClient } from "twitch";
-import { ClientCredentialsAuthProvider } from "twitch-auth";
+import { ApiClient } from "@twurple/api";
+import { ClientCredentialsAuthProvider } from "@twurple/auth";
+
 import { Config } from "./Config";
 import { log } from "./log";
 import { TwitchChannel } from "./TwitchChannel";

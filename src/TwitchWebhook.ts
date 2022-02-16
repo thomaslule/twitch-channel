@@ -1,9 +1,10 @@
+import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import axios from "axios";
 import { json } from "body-parser";
 import { createHmac, randomBytes } from "crypto";
 import * as express from "express";
 import { Server } from "http";
-import { ClientCredentialsAuthProvider } from "twitch-auth";
+
 import { log } from "./log";
 import { TwitchChannel } from "./TwitchChannel";
 
@@ -35,7 +36,7 @@ export class TwitchWebhook {
       }
       const app = express();
       app.use(this.router);
-      this.server = app.listen(this.config.port!, resolve);
+      this.server = app.listen(this.config.port!, () => resolve(undefined));
     });
   }
 

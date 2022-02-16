@@ -1,5 +1,6 @@
+import { ApiClient } from "@twurple/api";
 import { Client } from "tmi.js";
-import { ApiClient } from "twitch";
+
 import { Config } from "./Config";
 import { getTwitchUserByName } from "./getTwitchUserByName";
 import { log } from "./log";

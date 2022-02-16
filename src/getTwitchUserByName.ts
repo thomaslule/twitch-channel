@@ -1,4 +1,4 @@
-import { ApiClient } from "twitch";
+import { ApiClient } from "@twurple/api";
 
 export async function getTwitchUserByName(name: string, apiClient: ApiClient) {
   const login = name

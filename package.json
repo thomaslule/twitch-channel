@@ -8,7 +8,7 @@
     "prepublishOnly": "npm run build",
     "build": "rimraf ./lib && tsc",
     "test": "npm run build && node test",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -22,23 +22,23 @@
   "homepage": "https://github.com/thomaslule/twitch-channel#readme",
   "devDependencies": {
     "@types/express": "^4.17.7",
-    "@types/node": "^12.10.0",
-    "@types/tmi.js": "^1.4.0",
-    "@typescript-eslint/eslint-plugin": "^1.7.0",
-    "@typescript-eslint/parser": "^1.7.0",
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.2.0",
-    "prettier": "^2.0.5",
+    "@types/node": "^17.0.18",
+    "@types/tmi.js": "^1.8.1",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.5.1",
     "rimraf": "^2.6.2",
-    "typescript": "^3.8.3"
+    "typescript": "^4.5.5"
   },
   "dependencies": {
+    "@twurple/api": "^5.0.17",
+    "@twurple/auth": "^5.0.17",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
     "express": "^4.17.1",
-    "tmi.js": "^1.5.0",
-    "twitch": "^4.5.5",
-    "twitch-auth": "^4.5.5",
-    "twitch-eventsub": "^4.5.5"
+    "tmi.js": "^1.8.5"
   }
 }

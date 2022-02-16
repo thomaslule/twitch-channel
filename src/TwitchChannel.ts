@@ -1,6 +1,7 @@
+import { ApiClient } from "@twurple/api";
+import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import { EventEmitter } from "events";
-import { ApiClient } from "twitch";
-import { ClientCredentialsAuthProvider } from "twitch-auth";
+
 import { ChatBot } from "./ChatBot";
 import { Config } from "./Config";
 import { log } from "./log";
@@ -117,7 +118,10 @@ export class TwitchChannel extends EventEmitter {
     event: "stream-change-game",
     handler: (param: { game: string }) => void
   ): this;
-  public on(event: "stream-end", handler: (param: {}) => void): this;
+  public on(
+    event: "stream-end",
+    handler: (param: Record<string, never>) => void
+  ): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this {
     super.on(event, handler);
