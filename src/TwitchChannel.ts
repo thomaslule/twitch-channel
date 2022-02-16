@@ -4,11 +4,11 @@ import { EventEmitter } from "events";
 
 import { ChatBot } from "./ChatBot";
 import { Config } from "./Config";
+import { EventSub } from "./EventSub";
 import { log } from "./log";
-import { Webhook } from "./Webhook";
 
 export class TwitchChannel extends EventEmitter {
-  private webhook?: Webhook;
+  private eventSub?: EventSub;
   private chatBot: ChatBot;
 
   constructor(private config: Config) {
@@ -22,8 +22,8 @@ export class TwitchChannel extends EventEmitter {
       this.config.client_secret
     );
     const apiClient = new ApiClient({ authProvider });
-    if (Webhook.hasRequiredConfig(this.config)) {
-      this.webhook = new Webhook(this, this.config, apiClient, authProvider);
+    if (EventSub.hasRequiredConfig(this.config)) {
+      this.eventSub = new EventSub(this, this.config, apiClient);
     }
     this.chatBot = new ChatBot(this, this.config, apiClient);
   }
@@ -128,18 +128,11 @@ export class TwitchChannel extends EventEmitter {
     return this;
   }
 
-  public getMiddleware() {
-    if (!this.webhook) {
-      throw new Error("Cannot get middleware: webhook config not provided");
-    }
-    return this.webhook.getMiddleware();
-  }
-
   public async connect() {
-    await Promise.all([this.chatBot.connect(), this.webhook?.start()]);
+    await Promise.all([this.chatBot.connect(), this.eventSub?.start()]);
   }
 
   public async disconnect() {
-    await Promise.all([this.chatBot.disconnect(), this.webhook?.stop()]);
+    await Promise.all([this.chatBot.disconnect(), this.eventSub?.stop()]);
   }
 }

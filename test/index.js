@@ -1,6 +1,5 @@
 const { TwitchChannel } = require("../lib");
 const config = require("./config");
-// const express = require("express");
 
 const channel = new TwitchChannel(config);
 
@@ -45,8 +44,4 @@ channel.on("ban", (event) => {
   console.log("ban", event);
 });
 
-// const app = express();
-// app.use(channel.getMiddleware());
-// app.listen(3000, () => {
 channel.connect();
-// });
