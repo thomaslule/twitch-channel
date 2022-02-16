@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "simple-import-sort"],
+  plugins: ["@typescript-eslint", "simple-import-sort", "unused-imports"],
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -33,5 +33,6 @@ module.exports = {
     "no-dupe-class-members": "off",
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
+    "unused-imports/no-unused-imports": "error",
   },
 };
