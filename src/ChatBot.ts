@@ -43,6 +43,26 @@ export class ChatBot {
       },
     });
 
+    this.bot.on("ban", async (channel, username) => {
+      try {
+        const viewer = await getTwitchUserByName(username, apiClient);
+        if (!viewer) {
+          throw new Error(
+            `ban: couldnt get the twitch viewer named ${username}`
+          );
+        }
+        const viewerId = viewer.id;
+        const viewerName = viewer.displayName;
+        twitchChannel.emit("ban", { viewerId, viewerName });
+      } catch (error) {
+        log.error(
+          this.twitchChannel,
+          "an error happened during a ban event",
+          error
+        );
+      }
+    });
+
     this.bot.on("chat", (channel, userstate, message, self) => {
       try {
         if (self) {
@@ -83,29 +103,52 @@ export class ChatBot {
       }
     });
 
-    this.bot.on("subscription", async (channel, username, method, msg) => {
+    this.bot.on("hosted", async (channel, username, viewers, autohost) => {
       try {
         const viewer = await getTwitchUserByName(username, apiClient);
         if (!viewer) {
           throw new Error(
-            `subscription: couldnt get the twitch viewer named ${username}`
+            `host: couldnt get the twitch viewer named ${username}`
           );
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        const message = msg ? msg : undefined;
-        const { plan, planName } = method;
-        twitchChannel.emit("sub", {
+        twitchChannel.emit("host", {
           viewerId,
           viewerName,
-          message,
-          plan,
-          planName,
+          viewers,
+          autohost,
+        });
+      } catch (error) {
+        log.error(
+          twitchChannel,
+          "an error happened during a host event",
+          error
+        );
+      }
+    });
+
+    this.bot.on("raided", async (channel, raider, viewersString: any) => {
+      try {
+        const viewer = await getTwitchUserByName(raider, apiClient);
+        if (!viewer) {
+          throw new Error(
+            `raid: couldnt get the twitch viewer named ${raider}`
+          );
+        }
+        const viewerId = viewer.id;
+        const viewerName = viewer.displayName;
+        // viewers var is typed as number by the lib but it comes as a string
+        const viewers = Number.parseInt(viewersString, 10);
+        twitchChannel.emit("raid", {
+          viewerId,
+          viewerName,
+          viewers,
         });
       } catch (error) {
         log.error(
           this.twitchChannel,
-          "an error happened during a subscription event",
+          "an error happened during a raided event",
           error
         );
       }
@@ -186,72 +229,29 @@ export class ChatBot {
       }
     );
 
-    this.bot.on("raided", async (channel, raider, viewersString: any) => {
-      try {
-        const viewer = await getTwitchUserByName(raider, apiClient);
-        if (!viewer) {
-          throw new Error(
-            `raid: couldnt get the twitch viewer named ${raider}`
-          );
-        }
-        const viewerId = viewer.id;
-        const viewerName = viewer.displayName;
-        // viewers var is typed as number by the lib but it comes as a string
-        const viewers = Number.parseInt(viewersString, 10);
-        twitchChannel.emit("raid", {
-          viewerId,
-          viewerName,
-          viewers,
-        });
-      } catch (error) {
-        log.error(
-          this.twitchChannel,
-          "an error happened during a raided event",
-          error
-        );
-      }
-    });
-
-    this.bot.on("ban", async (channel, username) => {
+    this.bot.on("subscription", async (channel, username, method, msg) => {
       try {
         const viewer = await getTwitchUserByName(username, apiClient);
         if (!viewer) {
           throw new Error(
-            `ban: couldnt get the twitch viewer named ${username}`
+            `subscription: couldnt get the twitch viewer named ${username}`
           );
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        twitchChannel.emit("ban", { viewerId, viewerName });
-      } catch (error) {
-        log.error(
-          this.twitchChannel,
-          "an error happened during a ban event",
-          error
-        );
-      }
-    });
-
-    this.bot.on("hosted", async (channel, username, viewers, autohost) => {
-      try {
-        const viewer = await getTwitchUserByName(username, apiClient);
-        if (!viewer) {
-          throw new Error(
-            `host: couldnt get the twitch viewer named ${username}`
-          );
-        }
-        const viewerId = viewer.id;
-        const viewerName = viewer.displayName;
-        twitchChannel.emit("host", {
+        const message = msg ? msg : undefined;
+        const { plan, planName } = method;
+        twitchChannel.emit("sub", {
           viewerId,
           viewerName,
-          viewers,
-          autohost,
+          message,
+          plan,
+          planName,
         });
       } catch (error) {
         log.error(
-          twitchChannel,
-          "an error happened during a host event",
+          this.twitchChannel,
+          "an error happened during a subscription event",
           error
         );
       }
