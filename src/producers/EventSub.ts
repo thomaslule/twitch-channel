@@ -74,47 +74,56 @@ export class EventSub implements Producer {
   }
 
   public async produceEvents(type: EventType): Promise<boolean> {
-    if (type === "follow") {
-      this.subscriptions.push(
-        await this.listener.subscribeToChannelFollowEvents(
-          this.channel,
-          (event) => this.onFollow(event)
-        )
+    try {
+      if (type === "follow") {
+        this.subscriptions.push(
+          await this.listener.subscribeToChannelFollowEvents(
+            this.channel,
+            (event) => this.onFollow(event)
+          )
+        );
+        return true;
+      } else if (type === "stream-begin") {
+        this.subscriptions.push(
+          await this.listener.subscribeToStreamOnlineEvents(
+            this.channel,
+            (event) => this.onOnline(event)
+          )
+        );
+        return true;
+      } else if (type === "stream-change-game") {
+        this.subscriptions.push(
+          await this.listener.subscribeToChannelUpdateEvents(
+            this.channel,
+            (event) => this.onUserUpdate(event)
+          )
+        );
+        return true;
+      } else if (type === "stream-end") {
+        this.subscriptions.push(
+          await this.listener.subscribeToStreamOfflineEvents(this.channel, () =>
+            this.onOffline()
+          )
+        );
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      log.error(
+        this.emitter,
+        `event sub failed to subscribe to ${type} event`,
+        error
       );
-      return true;
-    } else if (type === "stream-begin") {
-      this.subscriptions.push(
-        await this.listener.subscribeToStreamOnlineEvents(
-          this.channel,
-          (event) => this.onOnline(event)
-        )
-      );
-      return true;
-    } else if (type === "stream-change-game") {
-      this.subscriptions.push(
-        await this.listener.subscribeToChannelUpdateEvents(
-          this.channel,
-          (event) => this.onUserUpdate(event)
-        )
-      );
-      return true;
-    } else if (type === "stream-end") {
-      this.subscriptions.push(
-        await this.listener.subscribeToStreamOfflineEvents(this.channel, () =>
-          this.onOffline()
-        )
-      );
-      return true;
-    } else {
       return false;
     }
   }
 
   public async stop() {
-    await Promise.all([
-      ...this.subscriptions.map((subscription) => subscription.stop()),
-      this.listener.unlisten(),
-    ]);
+    await Promise.all(
+      this.subscriptions.map((subscription) => subscription.stop())
+    );
+    await this.listener.unlisten();
   }
 
   private onFollow(event: EventSubChannelFollowEvent) {

@@ -12,9 +12,9 @@ export class ChatBot implements Producer {
   public name = "IRC";
   private config!: ChatBotConfig;
   private bot!: Client;
-  private isLoggedIn: boolean;
-  private isBroadcaster: boolean;
-  private isMod!: boolean;
+  private isLoggedIn = false;
+  private isBroadcaster = false;
+  private isMod = false;
 
   constructor(
     private emitter: TwitchEventEmitter,
@@ -51,26 +51,17 @@ export class ChatBot implements Producer {
   }
 
   public async connect() {
-    if (
-      this.bot.readyState() !== "CONNECTING" &&
-      this.bot.readyState() !== "OPEN"
-    ) {
-      await this.bot.connect();
-      if (this.isLoggedIn) {
-        const mods = await this.bot.mods(this.config.channel);
-        this.isMod = this.isBroadcaster || mods.includes(this.config.bot_name);
-      }
-      log.info(this.emitter, "connected to the IRC chat");
+    await this.bot.connect();
+    if (this.isLoggedIn) {
+      const mods = await this.bot.mods(this.config.channel);
+      this.isMod = this.isBroadcaster || mods.includes(this.config.bot_name);
     }
+    log.info(this.emitter, "connected to the IRC chat");
   }
 
   public async disconnect() {
-    if (
-      this.bot.readyState() !== "CLOSING" &&
-      this.bot.readyState() !== "CLOSED"
-    ) {
-      await this.bot.disconnect();
-    }
+    await this.bot.disconnect();
+    this.bot.removeAllListeners();
   }
 
   public async produceEvents(type: EventType): Promise<boolean> {

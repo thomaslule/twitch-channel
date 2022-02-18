@@ -1,5 +1,8 @@
-const { TwitchChannel } = require("../lib");
-const config = require("./config");
+import { stdin as input, stdout as output } from "node:process";
+import * as readline from "node:readline/promises";
+
+import { TwitchChannel } from "../lib/index.js";
+import config from "./config.js";
 
 const channel = new TwitchChannel(config);
 
@@ -67,4 +70,11 @@ channel.on("timeout", (event) => {
   console.log("timeout", event);
 });
 
-channel.connect();
+await channel.connect();
+await new Promise((resolve) => setTimeout(resolve, 3000));
+
+const rl = readline.createInterface({ input, output });
+await rl.question("Press enter to close\n");
+rl.close();
+
+await channel.disconnect();

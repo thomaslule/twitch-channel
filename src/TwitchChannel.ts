@@ -123,6 +123,7 @@ export class TwitchChannel {
 
   public async disconnect() {
     await Promise.all([this.chatBot.disconnect(), this.eventSub?.stop()]);
+    this.emitter.removeAllListeners();
   }
 }
 

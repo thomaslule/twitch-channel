@@ -7,7 +7,7 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "rimraf ./lib && tsc",
-    "test": "npm run build && node test",
+    "test": "npm run build && node test/index.mjs",
     "lint": "eslint src/**/*.ts"
   },
   "repository": {
