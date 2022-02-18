@@ -11,6 +11,7 @@ import { randomBytes } from "crypto";
 
 import { TwitchChannel } from ".";
 import { Config } from "./Config";
+import { log } from "./log";
 
 export class EventSub {
   private listener: EventSubListener;
@@ -35,6 +36,19 @@ export class EventSub {
         port: this.config.port,
       }),
       secret: randomBytes(20).toString("hex"),
+      logger: {
+        custom: (level, message) => {
+          if (level === 0 || level === 1) {
+            log.error(this.twitchChannel, message);
+          } else if (level === 2) {
+            log.warn(this.twitchChannel, message);
+          } else if (level === 3) {
+            log.info(this.twitchChannel, message);
+          } else if (level === 4) {
+            log.debug(this.twitchChannel, message);
+          }
+        },
+      },
     });
   }
 
