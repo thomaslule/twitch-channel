@@ -1,4 +1,4 @@
-import { ApiClient } from "@twurple/api";
+import { ApiClient, HelixUser } from "@twurple/api";
 import {
   EventSubChannelFollowEvent,
   EventSubChannelUpdateEvent,
@@ -9,13 +9,17 @@ import {
 } from "@twurple/eventsub";
 import { randomBytes } from "crypto";
 
-import { Config } from "./Config";
-import { log } from "./log";
-import { TwitchEventEmitter } from "./TwitchChannel";
+import { Config } from "../Config";
+import { EventType } from "../Events.types";
+import { log } from "../log";
+import { TwitchEventEmitter } from "../TwitchChannel";
+import { Producer } from "./Producer.types";
 
-export class EventSub {
+export class EventSub implements Producer {
+  public name = "EventSub";
   private listener: EventSubListener;
   private subscriptions: EventSubSubscription[] = [];
+  private channel!: HelixUser;
   private lastGame?: string;
 
   public static hasRequiredConfig(config: Config): boolean {
@@ -52,38 +56,58 @@ export class EventSub {
     });
   }
 
-  public async start() {
-    const stream = await this.apiClient.streams.getStreamByUserName(
-      this.config.channel
-    );
-    this.lastGame = stream?.gameName;
-    await this.listener.listen();
+  public async init() {
     const channel = await this.apiClient.users.getUserByName(
       this.config.channel
     );
     if (!channel) {
-      throw new Error(`channel ${this.config.channel} in options not found`);
+      throw new Error("config.channel not found");
     }
-    this.subscriptions.push(
-      await this.listener.subscribeToChannelFollowEvents(channel, (event) =>
-        this.onFollow(event)
-      )
+    this.channel = channel;
+
+    const stream = await this.apiClient.streams.getStreamByUserName(
+      this.config.channel
     );
-    this.subscriptions.push(
-      await this.listener.subscribeToStreamOnlineEvents(channel, (event) =>
-        this.onOnline(event)
-      )
-    );
-    this.subscriptions.push(
-      await this.listener.subscribeToStreamOfflineEvents(channel, () =>
-        this.onOffline()
-      )
-    );
-    this.subscriptions.push(
-      await this.listener.subscribeToChannelUpdateEvents(channel, (event) =>
-        this.onUserUpdate(event)
-      )
-    );
+    this.lastGame = stream?.gameName;
+
+    await this.listener.listen();
+  }
+
+  public async produceEvents(type: EventType): Promise<boolean> {
+    if (type === "follow") {
+      this.subscriptions.push(
+        await this.listener.subscribeToChannelFollowEvents(
+          this.channel,
+          (event) => this.onFollow(event)
+        )
+      );
+      return true;
+    } else if (type === "stream-begin") {
+      this.subscriptions.push(
+        await this.listener.subscribeToStreamOnlineEvents(
+          this.channel,
+          (event) => this.onOnline(event)
+        )
+      );
+      return true;
+    } else if (type === "stream-change-game") {
+      this.subscriptions.push(
+        await this.listener.subscribeToChannelUpdateEvents(
+          this.channel,
+          (event) => this.onUserUpdate(event)
+        )
+      );
+      return true;
+    } else if (type === "stream-end") {
+      this.subscriptions.push(
+        await this.listener.subscribeToStreamOfflineEvents(this.channel, () =>
+          this.onOffline()
+        )
+      );
+      return true;
+    } else {
+      return false;
+    }
   }
 
   public async stop() {

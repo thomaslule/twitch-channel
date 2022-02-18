@@ -2,7 +2,6 @@ import { ApiClient } from "@twurple/api";
 import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import { EventEmitter } from "events";
 
-import { ChatBot } from "./ChatBot";
 import { Config } from "./Config";
 import {
   BanEvent,
@@ -28,13 +27,16 @@ import {
   TimeoutEvent,
   TwitchEvent,
 } from "./Events.types";
-import { EventSub } from "./EventSub";
 import { log } from "./log";
+import { ChatBot } from "./producers/ChatBot";
+import { EventSub } from "./producers/EventSub";
+import { ProducersOrchestrator } from "./ProducersOrchestrator";
 
 export class TwitchChannel {
   private emitter = new EventEmitter();
   private eventSub?: EventSub;
   private chatBot: ChatBot;
+  private orchestrator: ProducersOrchestrator;
 
   constructor(private config: Config) {
     const twitchEmitter: TwitchEventEmitter = {
@@ -57,6 +59,11 @@ export class TwitchChannel {
       this.eventSub = new EventSub(twitchEmitter, this.config, apiClient);
     }
     this.chatBot = new ChatBot(twitchEmitter, this.config, apiClient);
+
+    this.orchestrator = new ProducersOrchestrator(
+      this.eventSub ? [this.chatBot, this.eventSub] : [this.chatBot],
+      twitchEmitter
+    );
   }
 
   public on(event: "ban", handler: (param: BanEvent) => void): this;
@@ -110,7 +117,8 @@ export class TwitchChannel {
   }
 
   public async connect() {
-    await Promise.all([this.chatBot.connect(), this.eventSub?.start()]);
+    await Promise.all([this.chatBot.connect(), this.eventSub?.init()]);
+    await this.orchestrator.subscribeProducers();
   }
 
   public async disconnect() {
