@@ -1,10 +1,10 @@
 import { ApiClient } from "@twurple/api";
-import { EventEmitter } from "stream";
 import { Client } from "tmi.js";
 
 import { Config } from "./Config";
 import { getTwitchUserByName } from "./getTwitchUserByName";
 import { log } from "./log";
+import { TwitchEventEmitter } from "./TwitchChannel";
 
 export class ChatBot {
   private config!: ChatBotConfig;
@@ -12,7 +12,7 @@ export class ChatBot {
   private bot!: Client;
 
   constructor(
-    private emitter: EventEmitter,
+    private emitter: TwitchEventEmitter,
     config: Config,
     apiClient: ApiClient
   ) {
@@ -53,7 +53,7 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        emitter.emit("ban", { viewerId, viewerName });
+        emitter.emit({ type: "ban", viewerId, viewerName });
       } catch (error) {
         log.error(this.emitter, "an error happened during a ban event", error);
       }
@@ -64,9 +64,9 @@ export class ChatBot {
         if (self) {
           return;
         }
-        const viewerId = userstate["user-id"];
-        const viewerName = userstate["display-name"];
-        emitter.emit("chat", { viewerId, viewerName, message });
+        const viewerId = userstate["user-id"]!;
+        const viewerName = userstate["display-name"]!;
+        emitter.emit({ type: "chat", viewerId, viewerName, message });
       } catch (error) {
         log.error(this.emitter, "an error happened during a chat event", error);
       }
@@ -74,13 +74,14 @@ export class ChatBot {
 
     this.bot.on("cheer", (channel, userstate, message) => {
       try {
-        const viewerId = userstate["user-id"];
-        const viewerName = userstate["display-name"];
+        const viewerId = userstate["user-id"]!;
+        const viewerName = userstate["display-name"]!;
         const amount = parseInt(userstate.bits!, 10);
         if (isNaN(amount)) {
           throw new Error(`cheer amount was not a number: ${userstate.bits}`);
         }
-        emitter.emit("cheer", {
+        emitter.emit({
+          type: "cheer",
           viewerId,
           viewerName,
           amount,
@@ -97,7 +98,7 @@ export class ChatBot {
 
     this.bot.on("clearchat", () => {
       try {
-        emitter.emit("clear-chat", {});
+        emitter.emit({ type: "clear-chat" });
       } catch (error) {
         log.error(
           this.emitter,
@@ -109,7 +110,7 @@ export class ChatBot {
 
     this.bot.on("emoteonly", () => {
       try {
-        emitter.emit("emote-only", {});
+        emitter.emit({ type: "emotes-only" });
       } catch (error) {
         log.error(
           this.emitter,
@@ -121,7 +122,11 @@ export class ChatBot {
 
     this.bot.on("followersonly", (channel, enabled, followAge) => {
       try {
-        emitter.emit("followers-only", { enabled, followAge });
+        emitter.emit({
+          type: "followers-only",
+          enabled,
+          followAge,
+        });
       } catch (error) {
         log.error(
           this.emitter,
@@ -141,7 +146,8 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        emitter.emit("host", {
+        emitter.emit({
+          type: "host",
           viewerId,
           viewerName,
           viewers,
@@ -162,7 +168,8 @@ export class ChatBot {
         }
         const targetId = target.id;
         const targetName = target.displayName;
-        emitter.emit("host", {
+        emitter.emit({
+          type: "hosting",
           targetId,
           targetName,
           viewers,
@@ -182,7 +189,8 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        emitter.emit("message-deleted", {
+        emitter.emit({
+          type: "message-deleted",
           viewerId,
           viewerName,
           deletedMessage,
@@ -208,7 +216,8 @@ export class ChatBot {
         const viewerName = viewer.displayName;
         // viewers var is typed as number by the lib but it comes as a string
         const viewers = Number.parseInt(viewersString, 10);
-        emitter.emit("raid", {
+        emitter.emit({
+          type: "raid",
           viewerId,
           viewerName,
           viewers,
@@ -240,7 +249,8 @@ export class ChatBot {
             userstate["msg-param-cumulative-months"] as string,
             10
           );
-          emitter.emit("resub", {
+          emitter.emit({
+            type: "resub",
             viewerId,
             viewerName,
             message,
@@ -279,7 +289,8 @@ export class ChatBot {
           const recipientId = recipientUser.id;
           const recipientName = recipientUser.displayName;
           const { plan, planName } = method;
-          emitter.emit("subgift", {
+          emitter.emit({
+            type: "subgift",
             viewerId,
             viewerName,
             recipientId,
@@ -299,7 +310,7 @@ export class ChatBot {
 
     this.bot.on("slowmode", (channel, enabled, interval) => {
       try {
-        emitter.emit("slow-mode", { enabled, interval });
+        emitter.emit({ type: "slow-mode", enabled, interval });
       } catch (error) {
         log.error(
           this.emitter,
@@ -311,7 +322,7 @@ export class ChatBot {
 
     this.bot.on("subscribers", (channel, enabled) => {
       try {
-        emitter.emit("subs-only", { enabled });
+        emitter.emit({ type: "subs-only", enabled });
       } catch (error) {
         log.error(
           this.emitter,
@@ -333,7 +344,8 @@ export class ChatBot {
         const viewerName = viewer.displayName;
         const message = msg ? msg : undefined;
         const { plan, planName } = method;
-        emitter.emit("sub", {
+        emitter.emit({
+          type: "sub",
           viewerId,
           viewerName,
           message,
@@ -361,7 +373,8 @@ export class ChatBot {
           }
           const viewerId = viewer.id;
           const viewerName = viewer.displayName;
-          emitter.emit("timeout", {
+          emitter.emit({
+            type: "timeout",
             viewerId,
             viewerName,
             duration,

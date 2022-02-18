@@ -1,29 +1,33 @@
-import { EventEmitter } from "events";
+import { TwitchEventEmitter } from "./TwitchChannel";
 
 export const log = {
-  debug(eventEmitter: EventEmitter, message: string) {
-    eventEmitter.emit("log", {
+  debug(eventEmitter: TwitchEventEmitter, message: string) {
+    eventEmitter.emit({
+      type: "log",
       level: "debug",
       message,
     });
   },
 
-  info(eventEmitter: EventEmitter, message: string) {
-    eventEmitter.emit("log", {
+  info(eventEmitter: TwitchEventEmitter, message: string) {
+    eventEmitter.emit({
+      type: "log",
       level: "info",
       message,
     });
   },
 
-  warn(eventEmitter: EventEmitter, message: string) {
-    eventEmitter.emit("log", {
+  warn(eventEmitter: TwitchEventEmitter, message: string) {
+    eventEmitter.emit({
+      type: "log",
       level: "warn",
       message,
     });
   },
 
-  error(eventEmitter: EventEmitter, message: string, error?: unknown) {
-    eventEmitter.emit("log", {
+  error(eventEmitter: TwitchEventEmitter, message: string, error?: unknown) {
+    eventEmitter.emit({
+      type: "log",
       level: "error",
       message,
       error,

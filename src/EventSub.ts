@@ -8,10 +8,10 @@ import {
   ReverseProxyAdapter,
 } from "@twurple/eventsub";
 import { randomBytes } from "crypto";
-import { EventEmitter } from "stream";
 
 import { Config } from "./Config";
 import { log } from "./log";
+import { TwitchEventEmitter } from "./TwitchChannel";
 
 export class EventSub {
   private listener: EventSubListener;
@@ -23,7 +23,7 @@ export class EventSub {
   }
 
   constructor(
-    private emitter: EventEmitter,
+    private emitter: TwitchEventEmitter,
     private config: Config,
     private apiClient: ApiClient
   ) {
@@ -96,24 +96,28 @@ export class EventSub {
   private onFollow(event: EventSubChannelFollowEvent) {
     const viewerId = event.userId;
     const viewerName = event.userDisplayName;
-    this.emitter.emit("follow", { viewerId, viewerName });
+    this.emitter.emit({ type: "follow", viewerId, viewerName });
   }
 
   private async onOnline(event: EventSubStreamOnlineEvent) {
     const stream = await event.getStream();
     this.lastGame = stream.gameName;
-    this.emitter.emit("stream-begin", { game: stream.gameName });
+    this.emitter.emit({
+      type: "stream-begin",
+      game: stream.gameName,
+    });
   }
 
   private onOffline() {
     this.lastGame = undefined;
-    this.emitter.emit("stream-end", {});
+    this.emitter.emit({ type: "stream-end" });
   }
 
   private onUserUpdate(event: EventSubChannelUpdateEvent) {
     if (this.lastGame && this.lastGame !== event.categoryName) {
       this.lastGame = event.categoryName;
-      this.emitter.emit("stream-change-game", {
+      this.emitter.emit({
+        type: "stream-change-game",
         game: event.categoryName,
       });
     }
