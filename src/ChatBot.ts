@@ -1,10 +1,10 @@
 import { ApiClient } from "@twurple/api";
+import { EventEmitter } from "stream";
 import { Client } from "tmi.js";
 
 import { Config } from "./Config";
 import { getTwitchUserByName } from "./getTwitchUserByName";
 import { log } from "./log";
-import { TwitchChannel } from "./TwitchChannel";
 
 export class ChatBot {
   private config!: ChatBotConfig;
@@ -12,7 +12,7 @@ export class ChatBot {
   private bot!: Client;
 
   constructor(
-    private twitchChannel: TwitchChannel,
+    private emitter: EventEmitter,
     config: Config,
     apiClient: ApiClient
   ) {
@@ -32,13 +32,13 @@ export class ChatBot {
       channels: [this.config.channel],
       logger: {
         info: (message) => {
-          log.debug(twitchChannel, `IRC bot: ${message}`);
+          log.debug(emitter, `IRC bot: ${message}`);
         },
         warn: (message) => {
-          log.warn(twitchChannel, `IRC bot: ${message}`);
+          log.warn(emitter, `IRC bot: ${message}`);
         },
         error: (message) => {
-          log.error(twitchChannel, `IRC bot: ${message}`);
+          log.error(emitter, `IRC bot: ${message}`);
         },
       },
     });
@@ -53,13 +53,9 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        twitchChannel.emit("ban", { viewerId, viewerName });
+        emitter.emit("ban", { viewerId, viewerName });
       } catch (error) {
-        log.error(
-          this.twitchChannel,
-          "an error happened during a ban event",
-          error
-        );
+        log.error(this.emitter, "an error happened during a ban event", error);
       }
     });
 
@@ -70,13 +66,9 @@ export class ChatBot {
         }
         const viewerId = userstate["user-id"];
         const viewerName = userstate["display-name"];
-        twitchChannel.emit("chat", { viewerId, viewerName, message });
+        emitter.emit("chat", { viewerId, viewerName, message });
       } catch (error) {
-        log.error(
-          this.twitchChannel,
-          "an error happened during a chat event",
-          error
-        );
+        log.error(this.emitter, "an error happened during a chat event", error);
       }
     });
 
@@ -88,7 +80,7 @@ export class ChatBot {
         if (isNaN(amount)) {
           throw new Error(`cheer amount was not a number: ${userstate.bits}`);
         }
-        twitchChannel.emit("cheer", {
+        emitter.emit("cheer", {
           viewerId,
           viewerName,
           amount,
@@ -96,7 +88,7 @@ export class ChatBot {
         });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a cheer event",
           error
         );
@@ -105,10 +97,10 @@ export class ChatBot {
 
     this.bot.on("clearchat", () => {
       try {
-        twitchChannel.emit("clear-chat", {});
+        emitter.emit("clear-chat", {});
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a clear-chat event",
           error
         );
@@ -117,10 +109,10 @@ export class ChatBot {
 
     this.bot.on("emoteonly", () => {
       try {
-        twitchChannel.emit("emote-only", {});
+        emitter.emit("emote-only", {});
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a emote-only event",
           error
         );
@@ -129,10 +121,10 @@ export class ChatBot {
 
     this.bot.on("followersonly", (channel, enabled, followAge) => {
       try {
-        twitchChannel.emit("followers-only", { enabled, followAge });
+        emitter.emit("followers-only", { enabled, followAge });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a followers-only event",
           error
         );
@@ -149,18 +141,14 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        twitchChannel.emit("host", {
+        emitter.emit("host", {
           viewerId,
           viewerName,
           viewers,
           autohost,
         });
       } catch (error) {
-        log.error(
-          twitchChannel,
-          "an error happened during a host event",
-          error
-        );
+        log.error(emitter, "an error happened during a host event", error);
       }
     });
 
@@ -174,17 +162,13 @@ export class ChatBot {
         }
         const targetId = target.id;
         const targetName = target.displayName;
-        twitchChannel.emit("host", {
+        emitter.emit("host", {
           targetId,
           targetName,
           viewers,
         });
       } catch (error) {
-        log.error(
-          twitchChannel,
-          "an error happened during a hosting event",
-          error
-        );
+        log.error(emitter, "an error happened during a hosting event", error);
       }
     });
 
@@ -198,14 +182,14 @@ export class ChatBot {
         }
         const viewerId = viewer.id;
         const viewerName = viewer.displayName;
-        twitchChannel.emit("message-deleted", {
+        emitter.emit("message-deleted", {
           viewerId,
           viewerName,
           deletedMessage,
         });
       } catch (error) {
         log.error(
-          twitchChannel,
+          emitter,
           "an error happened during a message-deleted event",
           error
         );
@@ -224,14 +208,14 @@ export class ChatBot {
         const viewerName = viewer.displayName;
         // viewers var is typed as number by the lib but it comes as a string
         const viewers = Number.parseInt(viewersString, 10);
-        twitchChannel.emit("raid", {
+        emitter.emit("raid", {
           viewerId,
           viewerName,
           viewers,
         });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a raided event",
           error
         );
@@ -256,7 +240,7 @@ export class ChatBot {
             userstate["msg-param-cumulative-months"] as string,
             10
           );
-          twitchChannel.emit("resub", {
+          emitter.emit("resub", {
             viewerId,
             viewerName,
             message,
@@ -266,7 +250,7 @@ export class ChatBot {
           });
         } catch (error) {
           log.error(
-            this.twitchChannel,
+            this.emitter,
             "an error happened during a resub event",
             error
           );
@@ -295,7 +279,7 @@ export class ChatBot {
           const recipientId = recipientUser.id;
           const recipientName = recipientUser.displayName;
           const { plan, planName } = method;
-          twitchChannel.emit("subgift", {
+          emitter.emit("subgift", {
             viewerId,
             viewerName,
             recipientId,
@@ -305,7 +289,7 @@ export class ChatBot {
           });
         } catch (error) {
           log.error(
-            this.twitchChannel,
+            this.emitter,
             "an error happened during a subgift event",
             error
           );
@@ -315,10 +299,10 @@ export class ChatBot {
 
     this.bot.on("slowmode", (channel, enabled, interval) => {
       try {
-        twitchChannel.emit("slow-mode", { enabled, interval });
+        emitter.emit("slow-mode", { enabled, interval });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a slow-mode event",
           error
         );
@@ -327,10 +311,10 @@ export class ChatBot {
 
     this.bot.on("subscribers", (channel, enabled) => {
       try {
-        twitchChannel.emit("subs-only", { enabled });
+        emitter.emit("subs-only", { enabled });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a subs-only event",
           error
         );
@@ -349,7 +333,7 @@ export class ChatBot {
         const viewerName = viewer.displayName;
         const message = msg ? msg : undefined;
         const { plan, planName } = method;
-        twitchChannel.emit("sub", {
+        emitter.emit("sub", {
           viewerId,
           viewerName,
           message,
@@ -358,7 +342,7 @@ export class ChatBot {
         });
       } catch (error) {
         log.error(
-          this.twitchChannel,
+          this.emitter,
           "an error happened during a subscription event",
           error
         );
@@ -377,14 +361,14 @@ export class ChatBot {
           }
           const viewerId = viewer.id;
           const viewerName = viewer.displayName;
-          twitchChannel.emit("timeout", {
+          emitter.emit("timeout", {
             viewerId,
             viewerName,
             duration,
           });
         } catch (error) {
           log.error(
-            this.twitchChannel,
+            this.emitter,
             "an error happened during a timeout event",
             error
           );
@@ -400,7 +384,7 @@ export class ChatBot {
     ) {
       await this.bot.connect();
       log.info(
-        this.twitchChannel,
+        this.emitter,
         this.anonymous
           ? "connected to the IRC chat as anonymous"
           : "connected to the IRC chat with the bot account"

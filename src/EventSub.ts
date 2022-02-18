@@ -8,8 +8,8 @@ import {
   ReverseProxyAdapter,
 } from "@twurple/eventsub";
 import { randomBytes } from "crypto";
+import { EventEmitter } from "stream";
 
-import { TwitchChannel } from ".";
 import { Config } from "./Config";
 import { log } from "./log";
 
@@ -23,7 +23,7 @@ export class EventSub {
   }
 
   constructor(
-    private twitchChannel: TwitchChannel,
+    private emitter: EventEmitter,
     private config: Config,
     private apiClient: ApiClient
   ) {
@@ -39,13 +39,13 @@ export class EventSub {
       logger: {
         custom: (level, message) => {
           if (level === 0 || level === 1) {
-            log.error(this.twitchChannel, message);
+            log.error(this.emitter, message);
           } else if (level === 2) {
-            log.warn(this.twitchChannel, message);
+            log.warn(this.emitter, message);
           } else if (level === 3) {
-            log.info(this.twitchChannel, message);
+            log.info(this.emitter, message);
           } else if (level === 4) {
-            log.debug(this.twitchChannel, message);
+            log.debug(this.emitter, message);
           }
         },
       },
@@ -96,24 +96,24 @@ export class EventSub {
   private onFollow(event: EventSubChannelFollowEvent) {
     const viewerId = event.userId;
     const viewerName = event.userDisplayName;
-    this.twitchChannel.emit("follow", { viewerId, viewerName });
+    this.emitter.emit("follow", { viewerId, viewerName });
   }
 
   private async onOnline(event: EventSubStreamOnlineEvent) {
     const stream = await event.getStream();
     this.lastGame = stream.gameName;
-    this.twitchChannel.emit("stream-begin", { game: stream.gameName });
+    this.emitter.emit("stream-begin", { game: stream.gameName });
   }
 
   private onOffline() {
     this.lastGame = undefined;
-    this.twitchChannel.emit("stream-end", {});
+    this.emitter.emit("stream-end", {});
   }
 
   private onUserUpdate(event: EventSubChannelUpdateEvent) {
     if (this.lastGame && this.lastGame !== event.categoryName) {
       this.lastGame = event.categoryName;
-      this.twitchChannel.emit("stream-change-game", {
+      this.emitter.emit("stream-change-game", {
         game: event.categoryName,
       });
     }

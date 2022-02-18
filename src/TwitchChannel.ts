@@ -7,14 +7,18 @@ import { Config } from "./Config";
 import { EventSub } from "./EventSub";
 import { log } from "./log";
 
-export class TwitchChannel extends EventEmitter {
+export class TwitchChannel {
+  private emitter = new EventEmitter();
   private eventSub?: EventSub;
   private chatBot: ChatBot;
 
   constructor(private config: Config) {
-    super();
     this.on("error", (error) => {
-      log.error(this, "an uncaught error happened in a listener", error);
+      log.error(
+        this.emitter,
+        "an uncaught error happened in a listener",
+        error
+      );
     });
 
     const authProvider = new ClientCredentialsAuthProvider(
@@ -23,9 +27,9 @@ export class TwitchChannel extends EventEmitter {
     );
     const apiClient = new ApiClient({ authProvider });
     if (EventSub.hasRequiredConfig(this.config)) {
-      this.eventSub = new EventSub(this, this.config, apiClient);
+      this.eventSub = new EventSub(this.emitter, this.config, apiClient);
     }
-    this.chatBot = new ChatBot(this, this.config, apiClient);
+    this.chatBot = new ChatBot(this.emitter, this.config, apiClient);
   }
 
   public on(
@@ -168,7 +172,7 @@ export class TwitchChannel extends EventEmitter {
   ): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this;
   public on(event: string | symbol, handler: (...args: any[]) => void): this {
-    super.on(event, handler);
+    this.emitter.on(event, handler);
     return this;
   }
 
