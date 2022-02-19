@@ -76,44 +76,36 @@ export class EventSub implements Producer {
 
   public async produceEvents(type: EventType): Promise<boolean> {
     try {
+      let subscription: EventSubSubscription | undefined;
       if (type === "follow") {
-        this.subscriptions.push(
-          await this.listener.subscribeToChannelFollowEvents(
-            this.channel,
-            (event) => this.onFollow(event)
-          )
+        subscription = await this.listener.subscribeToChannelFollowEvents(
+          this.channel,
+          (event) => this.onFollow(event)
         );
-        return true;
       } else if (type === "reward-redeem") {
-        this.subscriptions.push(
+        subscription =
           await this.listener.subscribeToChannelRedemptionAddEvents(
             this.channel,
             (event) => this.onRewardRedeem(event)
-          )
-        );
-        return true;
+          );
       } else if (type === "stream-begin") {
-        this.subscriptions.push(
-          await this.listener.subscribeToStreamOnlineEvents(
-            this.channel,
-            (event) => this.onOnline(event)
-          )
+        subscription = await this.listener.subscribeToStreamOnlineEvents(
+          this.channel,
+          (event) => this.onOnline(event)
         );
-        return true;
       } else if (type === "stream-change-game") {
-        this.subscriptions.push(
-          await this.listener.subscribeToChannelUpdateEvents(
-            this.channel,
-            (event) => this.onUserUpdate(event)
-          )
+        subscription = await this.listener.subscribeToChannelUpdateEvents(
+          this.channel,
+          (event) => this.onUserUpdate(event)
         );
-        return true;
       } else if (type === "stream-end") {
-        this.subscriptions.push(
-          await this.listener.subscribeToStreamOfflineEvents(this.channel, () =>
-            this.onOffline()
-          )
+        subscription = await this.listener.subscribeToStreamOfflineEvents(
+          this.channel,
+          () => this.onOffline()
         );
+      }
+      if (subscription) {
+        this.subscriptions.push(subscription);
         return true;
       } else {
         return false;
