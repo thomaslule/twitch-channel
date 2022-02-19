@@ -11,6 +11,7 @@ export type TwitchEvent =
   | MessageDeletedEvent
   | RaidEvent
   | ResubEvent
+  | RewardRedeemEvent
   | SlowModeEvent
   | StreamBeginEvent
   | StreamChangeGameEvent
@@ -101,6 +102,16 @@ export interface ResubEvent {
   months?: number;
   plan?: "Prime" | "1000" | "2000" | "3000";
   planName?: string;
+}
+
+export interface RewardRedeemEvent {
+  type: "reward-redeem";
+  viewerId: string;
+  viewerName: string;
+  rewardId: string;
+  rewartTitle: string;
+  rewardCost: number;
+  message: string;
 }
 
 export interface SlowModeEvent {

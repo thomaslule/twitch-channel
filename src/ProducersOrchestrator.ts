@@ -43,6 +43,7 @@ const eventsTypes: EventType[] = [
   "message-deleted",
   "raid",
   "resub",
+  "reward-redeem",
   "slow-mode",
   "stream-begin",
   "stream-change-game",

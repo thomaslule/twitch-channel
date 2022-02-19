@@ -1,6 +1,7 @@
 import { ApiClient, HelixUser } from "@twurple/api";
 import {
   EventSubChannelFollowEvent,
+  EventSubChannelRedemptionAddEvent,
   EventSubChannelUpdateEvent,
   EventSubListener,
   EventSubStreamOnlineEvent,
@@ -83,6 +84,14 @@ export class EventSub implements Producer {
           )
         );
         return true;
+      } else if (type === "reward-redeem") {
+        this.subscriptions.push(
+          await this.listener.subscribeToChannelRedemptionAddEvents(
+            this.channel,
+            (event) => this.onRewardRedeem(event)
+          )
+        );
+        return true;
       } else if (type === "stream-begin") {
         this.subscriptions.push(
           await this.listener.subscribeToStreamOnlineEvents(
@@ -130,6 +139,18 @@ export class EventSub implements Producer {
     const viewerId = event.userId;
     const viewerName = event.userDisplayName;
     this.emitter.emit({ type: "follow", viewerId, viewerName });
+  }
+
+  private onRewardRedeem(event: EventSubChannelRedemptionAddEvent) {
+    this.emitter.emit({
+      type: "reward-redeem",
+      viewerId: event.userId,
+      viewerName: event.userName,
+      rewardId: event.rewardId,
+      rewartTitle: event.rewardTitle,
+      rewardCost: event.rewardCost,
+      message: event.input,
+    });
   }
 
   private async onOnline(event: EventSubStreamOnlineEvent) {
