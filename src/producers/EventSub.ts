@@ -28,7 +28,7 @@ export class EventSub implements Producer {
   private lastTitle?: string;
 
   public static hasRequiredConfig(config: Config): boolean {
-    return config.callback_url !== undefined;
+    return config.callbackUrl !== undefined;
   }
 
   constructor(
@@ -36,7 +36,7 @@ export class EventSub implements Producer {
     private config: Config,
     private apiClient: ApiClient
   ) {
-    const callbackUrl = new URL(this.config.callback_url!);
+    const callbackUrl = new URL(this.config.callbackUrl!);
     this.listener = new EventSubListener({
       apiClient,
       adapter: new ReverseProxyAdapter({

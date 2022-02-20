@@ -53,8 +53,8 @@ export class TwitchChannel {
     });
 
     const authProvider = new ClientCredentialsAuthProvider(
-      this.config.client_id,
-      this.config.client_secret
+      this.config.clientId,
+      this.config.clientSecret
     );
     const apiClient = new ApiClient({ authProvider });
     if (EventSub.hasRequiredConfig(this.config)) {

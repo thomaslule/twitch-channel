@@ -6,13 +6,13 @@ export type Config = MandatoryConfig & Partial<OptionalConfig>;
 
 export interface MandatoryConfig {
   channel: string;
-  client_id: string;
-  client_secret: string;
+  clientId: string;
+  clientSecret: string;
 }
 
 export interface OptionalConfig {
-  bot_name: string;
-  bot_token: string;
-  callback_url: string;
+  botName: string;
+  botToken: string;
+  callbackUrl: string;
   port: number;
 }
