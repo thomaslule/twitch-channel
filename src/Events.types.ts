@@ -15,6 +15,7 @@ export type TwitchEvent =
   | SlowModeEvent
   | StreamBeginEvent
   | StreamChangeGameEvent
+  | StreamChangeTitleEvent
   | StreamEndEvent
   | SubEvent
   | SubgiftEvent
@@ -123,11 +124,17 @@ export interface SlowModeEvent {
 export interface StreamBeginEvent {
   type: "stream-begin";
   game: string;
+  title: string;
 }
 
 export interface StreamChangeGameEvent {
   type: "stream-change-game";
   game: string;
+}
+
+export interface StreamChangeTitleEvent {
+  type: "stream-change-title";
+  title: string;
 }
 
 export interface StreamEndEvent {

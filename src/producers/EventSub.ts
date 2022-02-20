@@ -22,6 +22,7 @@ export class EventSub implements Producer {
   private subscriptions: EventSubSubscription[] = [];
   private channel!: HelixUser;
   private lastGame?: string;
+  private lastTitle?: string;
 
   public static hasRequiredConfig(config: Config): boolean {
     return config.callback_url !== undefined;
@@ -70,6 +71,7 @@ export class EventSub implements Producer {
       this.config.channel
     );
     this.lastGame = stream?.gameName;
+    this.lastTitle = stream?.title;
 
     await this.listener.listen();
   }
@@ -96,7 +98,12 @@ export class EventSub implements Producer {
       } else if (type === "stream-change-game") {
         subscription = await this.listener.subscribeToChannelUpdateEvents(
           this.channel,
-          (event) => this.onUserUpdate(event)
+          (event) => this.onChannelUpdateCheckGame(event)
+        );
+      } else if (type === "stream-change-title") {
+        subscription = await this.listener.subscribeToChannelUpdateEvents(
+          this.channel,
+          (event) => this.onChannelUpdateCheckTitle(event)
         );
       } else if (type === "stream-end") {
         subscription = await this.listener.subscribeToStreamOfflineEvents(
@@ -148,23 +155,36 @@ export class EventSub implements Producer {
   private async onOnline(event: EventSubStreamOnlineEvent) {
     const stream = await event.getStream();
     this.lastGame = stream.gameName;
+    this.lastTitle = stream.title;
     this.emitter.emit({
       type: "stream-begin",
       game: stream.gameName,
+      title: stream.title,
     });
   }
 
   private onOffline() {
     this.lastGame = undefined;
+    this.lastTitle = undefined;
     this.emitter.emit({ type: "stream-end" });
   }
 
-  private onUserUpdate(event: EventSubChannelUpdateEvent) {
+  private onChannelUpdateCheckGame(event: EventSubChannelUpdateEvent) {
     if (this.lastGame && this.lastGame !== event.categoryName) {
       this.lastGame = event.categoryName;
       this.emitter.emit({
         type: "stream-change-game",
         game: event.categoryName,
+      });
+    }
+  }
+
+  private onChannelUpdateCheckTitle(event: EventSubChannelUpdateEvent) {
+    if (this.lastTitle && this.lastTitle !== event.streamTitle) {
+      this.lastTitle = event.streamTitle;
+      this.emitter.emit({
+        type: "stream-change-title",
+        title: event.streamTitle,
       });
     }
   }
