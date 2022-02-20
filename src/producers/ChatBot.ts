@@ -187,7 +187,7 @@ export class ChatBot implements Producer {
       });
       return true;
     } else if (type === "message-deleted") {
-      this.bot.on("messagedeleted", (channel, username, deletedMessage) => {
+      this.bot.on("messagedeleted", (channel, username, message) => {
         this.logErrors("messagedeleted", async () => {
           const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
@@ -199,7 +199,7 @@ export class ChatBot implements Producer {
             type,
             viewerId: viewer.id,
             viewerName: viewer.displayName,
-            deletedMessage,
+            message,
           });
         });
       });

@@ -85,7 +85,7 @@ export interface MessageDeletedEvent {
   type: "message-deleted";
   viewerId: string;
   viewerName: string;
-  deletedMessage: string;
+  message: string;
 }
 
 export interface RaidEvent {
