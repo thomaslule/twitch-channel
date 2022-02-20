@@ -83,9 +83,11 @@ export class ChatBot implements Producer {
                 `ban: couldnt get the twitch viewer with id ${userstate["target-user-id"]}`
               );
             }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
-            this.emitter.emit({ type, viewerId, viewerName });
+            this.emitter.emit({
+              type,
+              viewerId: viewer.id,
+              viewerName: viewer.displayName,
+            });
           });
         }
       );
@@ -96,25 +98,26 @@ export class ChatBot implements Producer {
           if (self) {
             return;
           }
-          const viewerId = userstate["user-id"]!;
-          const viewerName = userstate["display-name"]!;
-          this.emitter.emit({ type, viewerId, viewerName, message });
+          this.emitter.emit({
+            type,
+            viewerId: userstate["user-id"]!,
+            viewerName: userstate["display-name"]!,
+            message,
+          });
         });
       });
       return true;
     } else if (type === "cheer") {
       this.bot.on("cheer", (channel, userstate, message) => {
         this.logErrors("cheer", () => {
-          const viewerId = userstate["user-id"]!;
-          const viewerName = userstate["display-name"]!;
           const amount = parseInt(userstate.bits!, 10);
           if (isNaN(amount)) {
             throw new Error(`cheer amount was not a number: ${userstate.bits}`);
           }
           this.emitter.emit({
             type,
-            viewerId,
-            viewerName,
+            viewerId: userstate["user-id"]!,
+            viewerName: userstate["display-name"]!,
             amount,
             message,
           });
@@ -155,12 +158,10 @@ export class ChatBot implements Producer {
               `host: couldnt get the twitch viewer named ${username}`
             );
           }
-          const viewerId = viewer.id;
-          const viewerName = viewer.displayName;
           this.emitter.emit({
             type,
-            viewerId,
-            viewerName,
+            viewerId: viewer.id,
+            viewerName: viewer.displayName,
             viewers,
             autohost,
           });
@@ -176,12 +177,10 @@ export class ChatBot implements Producer {
               `host: couldnt get the twitch viewer named ${username}`
             );
           }
-          const targetId = target.id;
-          const targetName = target.displayName;
           this.emitter.emit({
             type,
-            targetId,
-            targetName,
+            targetId: target.id,
+            targetName: target.displayName,
             viewers,
           });
         });
@@ -196,12 +195,10 @@ export class ChatBot implements Producer {
               `host: couldnt get the twitch viewer named ${username}`
             );
           }
-          const viewerId = viewer.id;
-          const viewerName = viewer.displayName;
           this.emitter.emit({
             type,
-            viewerId,
-            viewerName,
+            viewerId: viewer.id,
+            viewerName: viewer.displayName,
             deletedMessage,
           });
         });
@@ -216,14 +213,12 @@ export class ChatBot implements Producer {
               `raid: couldnt get the twitch viewer named ${raider}`
             );
           }
-          const viewerId = viewer.id;
-          const viewerName = viewer.displayName;
           // viewers arg is typed as number by the lib but it comes as a string
           const viewers = Number.parseInt(viewersString, 10);
           this.emitter.emit({
             type,
-            viewerId,
-            viewerName,
+            viewerId: viewer.id,
+            viewerName: viewer.displayName,
             viewers,
           });
         });
@@ -237,7 +232,7 @@ export class ChatBot implements Producer {
       });
       return true;
     } else if (type === "sub") {
-      this.bot.on("subscription", (channel, username, method, msg) => {
+      this.bot.on("subscription", (channel, username, method, message) => {
         this.logErrors("subscription", async () => {
           const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
@@ -245,16 +240,13 @@ export class ChatBot implements Producer {
               `subscription: couldnt get the twitch viewer named ${username}`
             );
           }
-          const viewerId = viewer.id;
-          const viewerName = viewer.displayName;
-          const message = msg ?? "";
           const { plan } = method;
           const tier = !plan || plan === "Prime" ? "1000" : plan;
           this.emitter.emit({
             type,
-            viewerId,
-            viewerName,
-            message,
+            viewerId: viewer.id,
+            viewerName: viewer.displayName,
+            message: message ?? "",
             months: 1,
             tier,
           });
@@ -262,7 +254,7 @@ export class ChatBot implements Producer {
       });
       this.bot.on(
         "resub",
-        (channel, username, monthsDeprecated, msg, userstate, method) => {
+        (channel, username, monthsDeprecated, message, userstate, method) => {
           this.logErrors("resub", async () => {
             const viewer = await this.apiClient.users.getUserByName(username);
             if (!viewer) {
@@ -270,20 +262,17 @@ export class ChatBot implements Producer {
                 `resub: couldnt get the twitch viewer named ${username}`
               );
             }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
-            const message = msg ?? "";
-            const { plan } = method;
-            const tier = !plan || plan === "Prime" ? "1000" : plan;
             const months = Number.parseInt(
               userstate["msg-param-cumulative-months"] as string,
               10
             );
+            const { plan } = method;
+            const tier = !plan || plan === "Prime" ? "1000" : plan;
             this.emitter.emit({
               type,
-              viewerId,
-              viewerName,
-              message,
+              viewerId: viewer.id,
+              viewerName: viewer.displayName,
+              message: message ?? "",
               months,
               tier,
             });
@@ -302,24 +291,20 @@ export class ChatBot implements Producer {
                 `subgift: couldnt get the twitch viewer named ${recipient}`
               );
             }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
             const gifter = await this.apiClient.users.getUserByName(username);
             if (!gifter) {
               throw new Error(
                 `subgift: couldnt get the twitch viewer named ${username}`
               );
             }
-            const gifterId = gifter.id;
-            const gifterName = gifter.displayName;
             const { plan } = method;
             const tier = !plan || plan === "Prime" ? "1000" : plan;
             this.emitter.emit({
               type,
-              viewerId,
-              viewerName,
-              gifterId,
-              gifterName,
+              viewerId: viewer.id,
+              viewerName: viewer.displayName,
+              gifterId: gifter.id,
+              gifterName: gifter.displayName,
               tier,
             });
           });
@@ -344,12 +329,10 @@ export class ChatBot implements Producer {
                 `subscription: couldnt get the twitch viewer named ${username}`
               );
             }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
             this.emitter.emit({
               type,
-              viewerId,
-              viewerName,
+              viewerId: viewer.id,
+              viewerName: viewer.displayName,
               duration,
             });
           });

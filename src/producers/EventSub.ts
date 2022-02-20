@@ -161,9 +161,11 @@ export class EventSub implements Producer {
   }
 
   private onFollow(event: EventSubChannelFollowEvent) {
-    const viewerId = event.userId;
-    const viewerName = event.userDisplayName;
-    this.emitter.emit({ type: "follow", viewerId, viewerName });
+    this.emitter.emit({
+      type: "follow",
+      viewerId: event.userId,
+      viewerName: event.userDisplayName,
+    });
   }
 
   private async onOnline(event: EventSubStreamOnlineEvent) {
