@@ -187,7 +187,7 @@ export class EventSub implements Producer {
     this.emitter.emit({
       type: "reward-redeem",
       viewerId: event.userId,
-      viewerName: event.userName,
+      viewerName: event.userDisplayName,
       rewardId: event.rewardId,
       rewartTitle: event.rewardTitle,
       rewardCost: event.rewardCost,

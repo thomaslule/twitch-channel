@@ -3,7 +3,6 @@ import { Client } from "tmi.js";
 
 import { Config } from "../Config";
 import { EventType } from "../Events.types";
-import { getTwitchUserByName } from "../getTwitchUserByName";
 import { log } from "../log";
 import { TwitchEventEmitter } from "../TwitchChannel";
 import { Producer } from "./Producer.types";
@@ -66,19 +65,30 @@ export class ChatBot implements Producer {
 
   public async produceEvents(type: EventType): Promise<boolean> {
     if (type === "ban" && this.isMod) {
-      this.bot.on("ban", (channel, username) => {
-        this.logErrors("ban", async () => {
-          const viewer = await getTwitchUserByName(username, this.apiClient);
-          if (!viewer) {
-            throw new Error(
-              `ban: couldnt get the twitch viewer named ${username}`
+      interface BanUserState {
+        "target-user-id": string;
+      }
+      // ts-ignore is here because typing doesnt know about the last arg
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      this.bot.on(
+        "ban",
+        (channel, username, reason, userstate: BanUserState) => {
+          this.logErrors("ban", async () => {
+            const viewer = await this.apiClient.users.getUserById(
+              userstate["target-user-id"]
             );
-          }
-          const viewerId = viewer.id;
-          const viewerName = viewer.displayName;
-          this.emitter.emit({ type, viewerId, viewerName });
-        });
-      });
+            if (!viewer) {
+              throw new Error(
+                `ban: couldnt get the twitch viewer with id ${userstate["target-user-id"]}`
+              );
+            }
+            const viewerId = viewer.id;
+            const viewerName = viewer.displayName;
+            this.emitter.emit({ type, viewerId, viewerName });
+          });
+        }
+      );
       return true;
     } else if (type === "chat") {
       this.bot.on("chat", (channel, userstate, message, self) => {
@@ -139,7 +149,7 @@ export class ChatBot implements Producer {
     } else if (type === "host" && this.isBroadcaster) {
       this.bot.on("hosted", (channel, username, viewers, autohost) => {
         this.logErrors("hosted", async () => {
-          const viewer = await getTwitchUserByName(username, this.apiClient);
+          const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
             throw new Error(
               `host: couldnt get the twitch viewer named ${username}`
@@ -160,7 +170,7 @@ export class ChatBot implements Producer {
     } else if (type === "hosting") {
       this.bot.on("hosting", (channel, username, viewers) => {
         this.logErrors("hosting", async () => {
-          const target = await getTwitchUserByName(username, this.apiClient);
+          const target = await this.apiClient.users.getUserByName(username);
           if (!target) {
             throw new Error(
               `host: couldnt get the twitch viewer named ${username}`
@@ -180,7 +190,7 @@ export class ChatBot implements Producer {
     } else if (type === "message-deleted") {
       this.bot.on("messagedeleted", (channel, username, deletedMessage) => {
         this.logErrors("messagedeleted", async () => {
-          const viewer = await getTwitchUserByName(username, this.apiClient);
+          const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
             throw new Error(
               `host: couldnt get the twitch viewer named ${username}`
@@ -200,7 +210,7 @@ export class ChatBot implements Producer {
     } else if (type === "raid") {
       this.bot.on("raided", (channel, raider, viewersString: any) => {
         this.logErrors("raided", async () => {
-          const viewer = await getTwitchUserByName(raider, this.apiClient);
+          const viewer = await this.apiClient.users.getUserByName(raider);
           if (!viewer) {
             throw new Error(
               `raid: couldnt get the twitch viewer named ${raider}`
@@ -208,7 +218,7 @@ export class ChatBot implements Producer {
           }
           const viewerId = viewer.id;
           const viewerName = viewer.displayName;
-          // viewers var is typed as number by the lib but it comes as a string
+          // viewers arg is typed as number by the lib but it comes as a string
           const viewers = Number.parseInt(viewersString, 10);
           this.emitter.emit({
             type,
@@ -229,7 +239,7 @@ export class ChatBot implements Producer {
     } else if (type === "sub") {
       this.bot.on("subscription", (channel, username, method, msg) => {
         this.logErrors("subscription", async () => {
-          const viewer = await getTwitchUserByName(username, this.apiClient);
+          const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
             throw new Error(
               `subscription: couldnt get the twitch viewer named ${username}`
@@ -254,7 +264,7 @@ export class ChatBot implements Producer {
         "resub",
         (channel, username, monthsDeprecated, msg, userstate, method) => {
           this.logErrors("resub", async () => {
-            const viewer = await getTwitchUserByName(username, this.apiClient);
+            const viewer = await this.apiClient.users.getUserByName(username);
             if (!viewer) {
               throw new Error(
                 `resub: couldnt get the twitch viewer named ${username}`
@@ -286,15 +296,15 @@ export class ChatBot implements Producer {
         "subgift",
         (channel, username, monthsDeprecated, recipient, method) => {
           this.logErrors("subgift", async () => {
-            const viewer = await getTwitchUserByName(recipient, this.apiClient);
+            const viewer = await this.apiClient.users.getUserByName(recipient);
             if (!viewer) {
               throw new Error(
-                `subgift: couldnt get the twitch viewer named ${username}`
+                `subgift: couldnt get the twitch viewer named ${recipient}`
               );
             }
             const viewerId = viewer.id;
             const viewerName = viewer.displayName;
-            const gifter = await getTwitchUserByName(username, this.apiClient);
+            const gifter = await this.apiClient.users.getUserByName(username);
             if (!gifter) {
               throw new Error(
                 `subgift: couldnt get the twitch viewer named ${username}`
@@ -328,7 +338,7 @@ export class ChatBot implements Producer {
         "timeout",
         (channel, username, reasonDeprecated, duration) => {
           this.logErrors("timeout", async () => {
-            const viewer = await getTwitchUserByName(username, this.apiClient);
+            const viewer = await this.apiClient.users.getUserByName(username);
             if (!viewer) {
               throw new Error(
                 `subscription: couldnt get the twitch viewer named ${username}`
