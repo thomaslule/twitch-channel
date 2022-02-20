@@ -40,6 +40,8 @@ const eventsTypes: EventType[] = [
   "followers-only",
   "host",
   "hosting",
+  "hype-train-begin",
+  "hype-train-end",
   "message-deleted",
   "raid",
   "reward-redeem",

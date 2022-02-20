@@ -1,6 +1,8 @@
 import { ApiClient, HelixUser } from "@twurple/api";
 import {
+  EventSubChannelBanEvent,
   EventSubChannelFollowEvent,
+  EventSubChannelHypeTrainEndEvent,
   EventSubChannelRedemptionAddEvent,
   EventSubChannelSubscriptionGiftEvent,
   EventSubChannelUpdateEvent,
@@ -80,10 +82,28 @@ export class EventSub implements Producer {
   public async produceEvents(type: EventType): Promise<boolean> {
     try {
       let subscription: EventSubSubscription | undefined;
-      if (type === "follow") {
+      if (type === "ban") {
+        subscription = await this.listener.subscribeToChannelBanEvents(
+          this.channel,
+          (event) => this.onBan(event)
+        );
+      } else if (type === "follow") {
         subscription = await this.listener.subscribeToChannelFollowEvents(
           this.channel,
           (event) => this.onFollow(event)
+        );
+      } else if (type === "hype-train-begin") {
+        subscription =
+          await this.listener.subscribeToChannelHypeTrainBeginEvents(
+            this.channel,
+            () => {
+              this.emitter.emit({ type });
+            }
+          );
+      } else if (type === "hype-train-end") {
+        subscription = await this.listener.subscribeToChannelHypeTrainEndEvents(
+          this.channel,
+          (event) => this.onHypeTrainEnd(event)
         );
       } else if (type === "reward-redeem") {
         subscription =
@@ -133,11 +153,20 @@ export class EventSub implements Producer {
       return false;
     }
   }
+
   public async stop() {
     await Promise.all(
       this.subscriptions.map((subscription) => subscription.stop())
     );
     await this.listener.unlisten();
+  }
+
+  public onBan(event: EventSubChannelBanEvent): void {
+    this.emitter.emit({
+      type: "ban",
+      viewerId: event.userId,
+      viewerName: event.userDisplayName,
+    });
   }
 
   private onChannelUpdateCheckGame(event: EventSubChannelUpdateEvent) {
@@ -165,6 +194,17 @@ export class EventSub implements Producer {
       type: "follow",
       viewerId: event.userId,
       viewerName: event.userDisplayName,
+    });
+  }
+
+  private onHypeTrainEnd(event: EventSubChannelHypeTrainEndEvent): void {
+    this.emitter.emit({
+      type: "hype-train-end",
+      level: event.level,
+      topViewers: event.topContributors.map((viewer) => ({
+        viewerId: viewer.userId,
+        viewerName: viewer.userDisplayName,
+      })),
     });
   }
 

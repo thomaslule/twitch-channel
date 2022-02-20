@@ -8,6 +8,8 @@ export type TwitchEvent =
   | FollowersOnlyEvent
   | HostEvent
   | HostingEvent
+  | HypeTrainBeginEvent
+  | HypeTrainEndEvent
   | MessageDeletedEvent
   | RaidEvent
   | RewardRedeemEvent
@@ -79,6 +81,16 @@ export interface HostingEvent {
   targetId: string;
   targetName: string;
   viewers: number;
+}
+
+export interface HypeTrainBeginEvent {
+  type: "hype-train-begin";
+}
+
+export interface HypeTrainEndEvent {
+  type: "hype-train-end";
+  level: number;
+  topViewers: Array<{ viewerId: string; viewerName: string }>;
 }
 
 export interface MessageDeletedEvent {
