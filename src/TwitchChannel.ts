@@ -19,7 +19,7 @@ import {
   RewardRedeemEvent,
   SlowModeEvent,
   StreamBeginEvent,
-  StreamChangeGameEvent,
+  StreamChangeCategoryEvent,
   StreamChangeTitleEvent,
   StreamEndEvent,
   SubEvent,
@@ -101,8 +101,8 @@ export class TwitchChannel {
     handler: (param: StreamBeginEvent) => void
   ): this;
   public on(
-    event: "stream-change-game",
-    handler: (param: StreamChangeGameEvent) => void
+    event: "stream-change-category",
+    handler: (param: StreamChangeCategoryEvent) => void
   ): this;
   public on(
     event: "stream-change-title",

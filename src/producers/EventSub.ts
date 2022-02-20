@@ -24,7 +24,7 @@ export class EventSub implements Producer {
   private listener: EventSubListener;
   private subscriptions: EventSubSubscription[] = [];
   private channel!: HelixUser;
-  private lastGame?: string;
+  private lastCategory?: string;
   private lastTitle?: string;
 
   public static hasRequiredConfig(config: Config): boolean {
@@ -70,18 +70,13 @@ export class EventSub implements Producer {
     }
     this.channel = channel;
 
-    const stream = await this.apiClient.streams.getStreamByUserName(
-      this.config.channel
-    );
-    this.lastGame = stream?.gameName;
-    this.lastTitle = stream?.title;
-
     await this.listener.listen();
   }
 
   public async produceEvents(type: EventType): Promise<boolean> {
     try {
       let subscription: EventSubSubscription | undefined;
+      let noSubscriptionNeeded = false;
       if (type === "ban") {
         subscription = await this.listener.subscribeToChannelBanEvents(
           this.channel,
@@ -122,16 +117,32 @@ export class EventSub implements Producer {
           this.channel,
           (event) => this.onOnline(event)
         );
-      } else if (type === "stream-change-game") {
-        subscription = await this.listener.subscribeToChannelUpdateEvents(
-          this.channel,
-          (event) => this.onChannelUpdateCheckGame(event)
+      } else if (type === "stream-change-category") {
+        if (!this.lastCategory && !this.lastTitle) {
+          // we are not yet subscribed to channel updates
+          subscription = await this.listener.subscribeToChannelUpdateEvents(
+            this.channel,
+            (event) => this.onChannelUpdate(event)
+          );
+        }
+        const channel = await this.apiClient.channels.getChannelInfo(
+          this.channel.id
         );
+        this.lastCategory = channel!.gameId;
+        noSubscriptionNeeded = true;
       } else if (type === "stream-change-title") {
-        subscription = await this.listener.subscribeToChannelUpdateEvents(
-          this.channel,
-          (event) => this.onChannelUpdateCheckTitle(event)
+        if (!this.lastCategory && !this.lastTitle) {
+          // we are not yet subscribed to channel updates
+          subscription = await this.listener.subscribeToChannelUpdateEvents(
+            this.channel,
+            (event) => this.onChannelUpdate(event)
+          );
+        }
+        const channel = await this.apiClient.channels.getChannelInfo(
+          this.channel.id
         );
+        this.lastTitle = channel!.title;
+        noSubscriptionNeeded = true;
       } else if (type === "stream-end") {
         subscription = await this.listener.subscribeToStreamOfflineEvents(
           this.channel,
@@ -140,6 +151,8 @@ export class EventSub implements Producer {
       }
       if (subscription) {
         this.subscriptions.push(subscription);
+        return true;
+      } else if (noSubscriptionNeeded) {
         return true;
       } else {
         return false;
@@ -169,17 +182,15 @@ export class EventSub implements Producer {
     });
   }
 
-  private onChannelUpdateCheckGame(event: EventSubChannelUpdateEvent) {
-    if (this.lastGame && this.lastGame !== event.categoryName) {
-      this.lastGame = event.categoryName;
+  private onChannelUpdate(event: EventSubChannelUpdateEvent) {
+    if (this.lastCategory && this.lastCategory !== event.categoryId) {
+      this.lastCategory = event.categoryId;
       this.emitter.emit({
-        type: "stream-change-game",
-        game: event.categoryName,
+        type: "stream-change-category",
+        categoryId: event.categoryId,
+        categoryName: event.categoryName,
       });
     }
-  }
-
-  private onChannelUpdateCheckTitle(event: EventSubChannelUpdateEvent) {
     if (this.lastTitle && this.lastTitle !== event.streamTitle) {
       this.lastTitle = event.streamTitle;
       this.emitter.emit({
@@ -209,19 +220,22 @@ export class EventSub implements Producer {
   }
 
   private async onOnline(event: EventSubStreamOnlineEvent) {
-    const stream = await event.getStream();
-    this.lastGame = stream.gameName;
-    this.lastTitle = stream.title;
-    this.emitter.emit({
-      type: "stream-begin",
-      game: stream.gameName,
-      title: stream.title,
-    });
+    try {
+      const channel = await this.apiClient.channels.getChannelInfo(
+        event.broadcasterId
+      );
+      this.emitter.emit({
+        type: "stream-begin",
+        categoryId: channel!.gameId,
+        categoryName: channel!.gameName,
+        title: channel!.title,
+      });
+    } catch (err) {
+      log.error(this.emitter, "Error during stream-begin event", err);
+    }
   }
 
   private onOffline() {
-    this.lastGame = undefined;
-    this.lastTitle = undefined;
     this.emitter.emit({ type: "stream-end" });
   }
 

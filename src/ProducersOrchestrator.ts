@@ -47,7 +47,7 @@ const eventsTypes: EventType[] = [
   "reward-redeem",
   "slow-mode",
   "stream-begin",
-  "stream-change-game",
+  "stream-change-category",
   "stream-change-title",
   "stream-end",
   "sub",

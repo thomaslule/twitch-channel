@@ -15,7 +15,7 @@ export type TwitchEvent =
   | RewardRedeemEvent
   | SlowModeEvent
   | StreamBeginEvent
-  | StreamChangeGameEvent
+  | StreamChangeCategoryEvent
   | StreamChangeTitleEvent
   | StreamEndEvent
   | SubEvent
@@ -125,13 +125,15 @@ export interface SlowModeEvent {
 
 export interface StreamBeginEvent {
   type: "stream-begin";
-  game: string;
+  categoryId: string;
+  categoryName: string;
   title: string;
 }
 
-export interface StreamChangeGameEvent {
-  type: "stream-change-game";
-  game: string;
+export interface StreamChangeCategoryEvent {
+  type: "stream-change-category";
+  categoryId: string;
+  categoryName: string;
 }
 
 export interface StreamChangeTitleEvent {
