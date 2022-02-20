@@ -2,6 +2,7 @@ import { ApiClient, HelixUser } from "@twurple/api";
 import {
   EventSubChannelFollowEvent,
   EventSubChannelRedemptionAddEvent,
+  EventSubChannelSubscriptionGiftEvent,
   EventSubChannelUpdateEvent,
   EventSubListener,
   EventSubStreamOnlineEvent,
@@ -90,6 +91,12 @@ export class EventSub implements Producer {
             this.channel,
             (event) => this.onRewardRedeem(event)
           );
+      } else if (type === "sub-gift") {
+        subscription =
+          await this.listener.subscribeToChannelSubscriptionGiftEvents(
+            this.channel,
+            (event) => this.onSubGift(event)
+          );
       } else if (type === "stream-begin") {
         subscription = await this.listener.subscribeToStreamOnlineEvents(
           this.channel,
@@ -126,47 +133,11 @@ export class EventSub implements Producer {
       return false;
     }
   }
-
   public async stop() {
     await Promise.all(
       this.subscriptions.map((subscription) => subscription.stop())
     );
     await this.listener.unlisten();
-  }
-
-  private onFollow(event: EventSubChannelFollowEvent) {
-    const viewerId = event.userId;
-    const viewerName = event.userDisplayName;
-    this.emitter.emit({ type: "follow", viewerId, viewerName });
-  }
-
-  private onRewardRedeem(event: EventSubChannelRedemptionAddEvent) {
-    this.emitter.emit({
-      type: "reward-redeem",
-      viewerId: event.userId,
-      viewerName: event.userName,
-      rewardId: event.rewardId,
-      rewartTitle: event.rewardTitle,
-      rewardCost: event.rewardCost,
-      message: event.input,
-    });
-  }
-
-  private async onOnline(event: EventSubStreamOnlineEvent) {
-    const stream = await event.getStream();
-    this.lastGame = stream.gameName;
-    this.lastTitle = stream.title;
-    this.emitter.emit({
-      type: "stream-begin",
-      game: stream.gameName,
-      title: stream.title,
-    });
-  }
-
-  private onOffline() {
-    this.lastGame = undefined;
-    this.lastTitle = undefined;
-    this.emitter.emit({ type: "stream-end" });
   }
 
   private onChannelUpdateCheckGame(event: EventSubChannelUpdateEvent) {
@@ -187,5 +158,51 @@ export class EventSub implements Producer {
         title: event.streamTitle,
       });
     }
+  }
+
+  private onFollow(event: EventSubChannelFollowEvent) {
+    const viewerId = event.userId;
+    const viewerName = event.userDisplayName;
+    this.emitter.emit({ type: "follow", viewerId, viewerName });
+  }
+
+  private async onOnline(event: EventSubStreamOnlineEvent) {
+    const stream = await event.getStream();
+    this.lastGame = stream.gameName;
+    this.lastTitle = stream.title;
+    this.emitter.emit({
+      type: "stream-begin",
+      game: stream.gameName,
+      title: stream.title,
+    });
+  }
+
+  private onOffline() {
+    this.lastGame = undefined;
+    this.lastTitle = undefined;
+    this.emitter.emit({ type: "stream-end" });
+  }
+
+  private onRewardRedeem(event: EventSubChannelRedemptionAddEvent) {
+    this.emitter.emit({
+      type: "reward-redeem",
+      viewerId: event.userId,
+      viewerName: event.userName,
+      rewardId: event.rewardId,
+      rewartTitle: event.rewardTitle,
+      rewardCost: event.rewardCost,
+      message: event.input,
+    });
+  }
+
+  private onSubGift(event: EventSubChannelSubscriptionGiftEvent): void {
+    this.emitter.emit({
+      type: "sub-gift",
+      viewerId: event.gifterId ?? undefined,
+      viewerName: event.gifterDisplayName ?? undefined,
+      number: event.amount,
+      tier: event.tier,
+      total: event.cumulativeAmount ?? undefined,
+    });
   }
 }

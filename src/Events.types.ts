@@ -10,7 +10,6 @@ export type TwitchEvent =
   | HostingEvent
   | MessageDeletedEvent
   | RaidEvent
-  | ResubEvent
   | RewardRedeemEvent
   | SlowModeEvent
   | StreamBeginEvent
@@ -18,7 +17,8 @@ export type TwitchEvent =
   | StreamChangeTitleEvent
   | StreamEndEvent
   | SubEvent
-  | SubgiftEvent
+  | SubGiftReceivedEvent
+  | SubGiftEvent
   | SubsOnlyEvent
   | TimeoutEvent
   | LogEvent;
@@ -95,16 +95,6 @@ export interface RaidEvent {
   viewers: number;
 }
 
-export interface ResubEvent {
-  type: "resub";
-  viewerId: string;
-  viewerName: string;
-  message?: string;
-  months?: number;
-  plan?: "Prime" | "1000" | "2000" | "3000";
-  planName?: string;
-}
-
 export interface RewardRedeemEvent {
   type: "reward-redeem";
   viewerId: string;
@@ -145,19 +135,27 @@ export interface SubEvent {
   type: "sub";
   viewerId: string;
   viewerName: string;
-  message?: string;
-  plan?: "Prime" | "1000" | "2000" | "3000";
-  planName?: string;
+  message: string;
+  months: number;
+  tier: "1000" | "2000" | "3000";
 }
 
-export interface SubgiftEvent {
-  type: "subgift";
-  viewerId: string;
-  viewerName: string;
-  recipientId: string;
-  recipientName: string;
-  plan?: "Prime" | "1000" | "2000" | "3000";
-  planName?: string;
+export interface SubGiftEvent {
+  type: "sub-gift";
+  viewerId?: string;
+  viewerName?: string;
+  number: number;
+  total?: number;
+  tier: "1000" | "2000" | "3000";
+}
+
+export interface SubGiftReceivedEvent {
+  type: "sub-gift-received";
+  viewerId?: string;
+  viewerName?: string;
+  gifterId: string;
+  gifterName: string;
+  tier: "1000" | "2000" | "3000";
 }
 
 export interface SubsOnlyEvent {

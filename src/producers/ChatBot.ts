@@ -219,87 +219,10 @@ export class ChatBot implements Producer {
         });
       });
       return true;
-    } else if (type === "resub") {
-      this.bot.on(
-        "resub",
-        (channel, username, monthsDeprecated, msg, userstate, method) => {
-          this.logErrors("resub", async () => {
-            const viewer = await getTwitchUserByName(username, this.apiClient);
-            if (!viewer) {
-              throw new Error(
-                `resub: couldnt get the twitch viewer named ${username}`
-              );
-            }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
-            const message = msg ? msg : undefined;
-            const { plan, planName } = method;
-            const months = Number.parseInt(
-              userstate["msg-param-cumulative-months"] as string,
-              10
-            );
-            this.emitter.emit({
-              type,
-              viewerId,
-              viewerName,
-              message,
-              months: Number.isNaN(months) ? undefined : months,
-              plan,
-              planName,
-            });
-          });
-        }
-      );
-      return true;
-    } else if (type === "subgift") {
-      this.bot.on(
-        "subgift",
-        (channel, username, monthsDeprecated, recipient, method) => {
-          this.logErrors("subgift", async () => {
-            const viewer = await getTwitchUserByName(username, this.apiClient);
-            if (!viewer) {
-              throw new Error(
-                `subgift: couldnt get the twitch viewer named ${username}`
-              );
-            }
-            const viewerId = viewer.id;
-            const viewerName = viewer.displayName;
-            const recipientUser = await getTwitchUserByName(
-              recipient,
-              this.apiClient
-            );
-            if (!recipientUser) {
-              throw new Error(
-                `subgift: couldnt get the twitch viewer named ${username}`
-              );
-            }
-            const recipientId = recipientUser.id;
-            const recipientName = recipientUser.displayName;
-            const { plan, planName } = method;
-            this.emitter.emit({
-              type,
-              viewerId,
-              viewerName,
-              recipientId,
-              recipientName,
-              plan,
-              planName,
-            });
-          });
-        }
-      );
-      return true;
     } else if (type === "slow-mode") {
       this.bot.on("slowmode", (channel, enabled, interval) => {
         this.logErrors("slowmode", () => {
           this.emitter.emit({ type, enabled, interval });
-        });
-      });
-      return true;
-    } else if (type === "subs-only") {
-      this.bot.on("subscribers", (channel, enabled) => {
-        this.logErrors("subscribers", () => {
-          this.emitter.emit({ type, enabled });
         });
       });
       return true;
@@ -314,16 +237,89 @@ export class ChatBot implements Producer {
           }
           const viewerId = viewer.id;
           const viewerName = viewer.displayName;
-          const message = msg ? msg : undefined;
-          const { plan, planName } = method;
+          const message = msg ?? "";
+          const { plan } = method;
+          const tier = !plan || plan === "Prime" ? "1000" : plan;
           this.emitter.emit({
             type,
             viewerId,
             viewerName,
             message,
-            plan,
-            planName,
+            months: 1,
+            tier,
           });
+        });
+      });
+      this.bot.on(
+        "resub",
+        (channel, username, monthsDeprecated, msg, userstate, method) => {
+          this.logErrors("resub", async () => {
+            const viewer = await getTwitchUserByName(username, this.apiClient);
+            if (!viewer) {
+              throw new Error(
+                `resub: couldnt get the twitch viewer named ${username}`
+              );
+            }
+            const viewerId = viewer.id;
+            const viewerName = viewer.displayName;
+            const message = msg ?? "";
+            const { plan } = method;
+            const tier = !plan || plan === "Prime" ? "1000" : plan;
+            const months = Number.parseInt(
+              userstate["msg-param-cumulative-months"] as string,
+              10
+            );
+            this.emitter.emit({
+              type,
+              viewerId,
+              viewerName,
+              message,
+              months,
+              tier,
+            });
+          });
+        }
+      );
+      return true;
+    } else if (type === "sub-gift-received") {
+      this.bot.on(
+        "subgift",
+        (channel, username, monthsDeprecated, recipient, method) => {
+          this.logErrors("subgift", async () => {
+            const viewer = await getTwitchUserByName(recipient, this.apiClient);
+            if (!viewer) {
+              throw new Error(
+                `subgift: couldnt get the twitch viewer named ${username}`
+              );
+            }
+            const viewerId = viewer.id;
+            const viewerName = viewer.displayName;
+            const gifter = await getTwitchUserByName(username, this.apiClient);
+            if (!gifter) {
+              throw new Error(
+                `subgift: couldnt get the twitch viewer named ${username}`
+              );
+            }
+            const gifterId = gifter.id;
+            const gifterName = gifter.displayName;
+            const { plan } = method;
+            const tier = !plan || plan === "Prime" ? "1000" : plan;
+            this.emitter.emit({
+              type,
+              viewerId,
+              viewerName,
+              gifterId,
+              gifterName,
+              tier,
+            });
+          });
+        }
+      );
+      return true;
+    } else if (type === "subs-only") {
+      this.bot.on("subscribers", (channel, enabled) => {
+        this.logErrors("subscribers", () => {
+          this.emitter.emit({ type, enabled });
         });
       });
       return true;

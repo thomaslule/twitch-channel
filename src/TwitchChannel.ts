@@ -16,13 +16,15 @@ import {
   LogEvent,
   MessageDeletedEvent,
   RaidEvent,
-  ResubEvent,
+  RewardRedeemEvent,
   SlowModeEvent,
   StreamBeginEvent,
   StreamChangeGameEvent,
+  StreamChangeTitleEvent,
   StreamEndEvent,
   SubEvent,
-  SubgiftEvent,
+  SubGiftEvent,
+  SubGiftReceivedEvent,
   SubsOnlyEvent,
   TimeoutEvent,
   TwitchEvent,
@@ -89,7 +91,10 @@ export class TwitchChannel {
     handler: (param: MessageDeletedEvent) => void
   ): this;
   public on(event: "raid", handler: (param: RaidEvent) => void): this;
-  public on(event: "resub", handler: (param: ResubEvent) => void): this;
+  public on(
+    event: "reward-redeem",
+    handler: (param: RewardRedeemEvent) => void
+  ): this;
   public on(event: "slow-mode", handler: (param: SlowModeEvent) => void): this;
   public on(
     event: "stream-begin",
@@ -100,11 +105,19 @@ export class TwitchChannel {
     handler: (param: StreamChangeGameEvent) => void
   ): this;
   public on(
+    event: "stream-change-title",
+    handler: (param: StreamChangeTitleEvent) => void
+  ): this;
+  public on(
     event: "stream-end",
     handler: (param: StreamEndEvent) => void
   ): this;
   public on(event: "sub", handler: (param: SubEvent) => void): this;
-  public on(event: "subgift", handler: (param: SubgiftEvent) => void): this;
+  public on(event: "sub-gift", handler: (param: SubGiftEvent) => void): this;
+  public on(
+    event: "sub-gift-received",
+    handler: (param: SubGiftReceivedEvent) => void
+  ): this;
   public on(event: "subs-only", handler: (param: SubsOnlyEvent) => void): this;
   public on(event: "timeout", handler: (param: TimeoutEvent) => void): this;
   public on(event: "log", handler: (param: LogEvent) => void): this;
