@@ -5,8 +5,9 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build && npm run doc",
     "build": "rimraf ./lib && tsc",
+    "doc": "typedoc --categorizeByGroup false --excludePrivate --disableSources --readme none --out docs src",
     "demo": "npm run build && node test/demo.mjs",
     "demo:express": "npm run build && node test/demo-express.mjs",
     "lint": "eslint src/**/*.ts"
@@ -33,6 +34,7 @@
     "express": "^4.17.3",
     "prettier": "^2.5.1",
     "rimraf": "^2.6.2",
+    "typedoc": "^0.22.12",
     "typescript": "^4.5.5"
   },
   "dependencies": {

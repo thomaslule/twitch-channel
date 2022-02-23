@@ -132,9 +132,9 @@ export class ChatBot implements Producer {
       });
       return true;
     } else if (type === "emotes-only") {
-      this.bot.on("emoteonly", () => {
+      this.bot.on("emoteonly", (channel, enabled) => {
         this.logErrors("emoteonly", () => {
-          this.emitter.emit({ type });
+          this.emitter.emit({ type, enabled });
         });
       });
       return true;
