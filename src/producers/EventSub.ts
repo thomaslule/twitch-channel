@@ -8,6 +8,7 @@ import {
   EventSubChannelUpdateEvent,
   EventSubListener,
   EventSubMiddleware,
+  EventSubStreamOfflineEvent,
   EventSubStreamOnlineEvent,
   EventSubSubscription,
   ReverseProxyAdapter,
@@ -23,7 +24,8 @@ import { Producer } from "./Producer.types";
 export class EventSub implements Producer {
   public name = "EventSub";
   private eventSub: EventSubListener | EventSubMiddleware;
-  private subscriptions: EventSubSubscription[] = [];
+  private subscriptions: Subscription[] = [];
+  private emittedTypes: EventType[] = [];
   private channel!: HelixUser;
   private lastCategory?: string;
   private lastTitle?: string;
@@ -102,94 +104,132 @@ export class EventSub implements Producer {
 
   public async produceEvents(type: EventType): Promise<boolean> {
     try {
-      let subscription: EventSubSubscription | undefined;
-      let noSubscriptionNeeded = false;
       if (type === "ban") {
-        subscription = await this.eventSub.subscribeToChannelBanEvents(
+        const subscription = await this.eventSub.subscribeToChannelBanEvents(
           this.channel,
           (event) => this.logErrors(type, () => this.onBan(event))
         );
+        this.subscriptions.push({
+          eventClass: EventSubChannelBanEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "follow") {
-        subscription = await this.eventSub.subscribeToChannelFollowEvents(
+        const subscription = await this.eventSub.subscribeToChannelFollowEvents(
           this.channel,
           (event) => this.logErrors(type, () => this.onFollow(event))
         );
+        this.subscriptions.push({
+          eventClass: EventSubChannelBanEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "hype-train-begin") {
-        subscription =
+        const subscription =
           await this.eventSub.subscribeToChannelHypeTrainBeginEvents(
             this.channel,
             () => {
               this.emitter.emit({ type });
             }
           );
+        this.subscriptions.push({
+          eventClass: EventSubChannelBanEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "hype-train-end") {
-        subscription = await this.eventSub.subscribeToChannelHypeTrainEndEvents(
-          this.channel,
-          (event) => this.logErrors(type, () => this.onHypeTrainEnd(event))
-        );
+        const subscription =
+          await this.eventSub.subscribeToChannelHypeTrainEndEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onHypeTrainEnd(event))
+          );
+        this.subscriptions.push({
+          eventClass: EventSubChannelHypeTrainEndEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "reward-redeem") {
-        subscription =
+        const subscription =
           await this.eventSub.subscribeToChannelRedemptionAddEvents(
             this.channel,
             (event) => this.logErrors(type, () => this.onRewardRedeem(event))
           );
+        this.subscriptions.push({
+          eventClass: EventSubChannelRedemptionAddEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "sub-gift") {
-        subscription =
+        const subscription =
           await this.eventSub.subscribeToChannelSubscriptionGiftEvents(
             this.channel,
             (event) => this.logErrors(type, () => this.onSubGift(event))
           );
+        this.subscriptions.push({
+          eventClass: EventSubChannelSubscriptionGiftEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "stream-begin") {
-        subscription = await this.eventSub.subscribeToStreamOnlineEvents(
+        const subscription = await this.eventSub.subscribeToStreamOnlineEvents(
           this.channel,
           (event) => this.logErrors(type, () => this.onOnline(event))
         );
+        this.subscriptions.push({
+          eventClass: EventSubStreamOnlineEvent,
+          eventSubSubscription: subscription,
+        });
       } else if (type === "stream-change-category") {
         if (!this.lastCategory && !this.lastTitle) {
           // we are not yet subscribed to channel updates
-          subscription = await this.eventSub.subscribeToChannelUpdateEvents(
-            this.channel,
-            (event) =>
-              this.logErrors("channel-update", () =>
-                this.onChannelUpdate(event)
-              )
-          );
+          const subscription =
+            await this.eventSub.subscribeToChannelUpdateEvents(
+              this.channel,
+              (event) =>
+                this.logErrors("channel-update", () =>
+                  this.onChannelUpdate(event)
+                )
+            );
+          this.subscriptions.push({
+            eventClass: EventSubChannelUpdateEvent,
+            eventSubSubscription: subscription,
+          });
         }
         const channel = await this.apiClient.channels.getChannelInfo(
           this.channel.id
         );
         this.lastCategory = channel!.gameId;
-        noSubscriptionNeeded = true;
       } else if (type === "stream-change-title") {
-        if (!this.lastCategory && !this.lastTitle) {
-          // we are not yet subscribed to channel updates
-          subscription = await this.eventSub.subscribeToChannelUpdateEvents(
-            this.channel,
-            (event) =>
-              this.logErrors("channel-update", () =>
-                this.onChannelUpdate(event)
-              )
-          );
+        if (
+          !this.subscriptions.find(
+            ({ eventClass }) => eventClass === EventSubChannelUpdateEvent
+          )
+        ) {
+          const subscription =
+            await this.eventSub.subscribeToChannelUpdateEvents(
+              this.channel,
+              (event) =>
+                this.logErrors("channel-update", () =>
+                  this.onChannelUpdate(event)
+                )
+            );
+          this.subscriptions.push({
+            eventClass: EventSubChannelUpdateEvent,
+            eventSubSubscription: subscription,
+          });
         }
         const channel = await this.apiClient.channels.getChannelInfo(
           this.channel.id
         );
         this.lastTitle = channel!.title;
-        noSubscriptionNeeded = true;
       } else if (type === "stream-end") {
-        subscription = await this.eventSub.subscribeToStreamOfflineEvents(
+        const subscription = await this.eventSub.subscribeToStreamOfflineEvents(
           this.channel,
           () => this.logErrors(type, () => this.onOffline())
         );
-      }
-      if (subscription) {
-        this.subscriptions.push(subscription);
-        return true;
-      } else if (noSubscriptionNeeded) {
-        return true;
+        this.subscriptions.push({
+          eventClass: EventSubStreamOfflineEvent,
+          eventSubSubscription: subscription,
+        });
       } else {
         return false;
       }
+      this.emittedTypes.push(type);
+      return true;
     } catch (error: any) {
       if (error.statusCode === 403) {
         log.debug(
@@ -203,14 +243,15 @@ export class EventSub implements Producer {
           error
         );
       }
-
       return false;
     }
   }
 
   public async stop() {
     await Promise.all(
-      this.subscriptions.map((subscription) => subscription.stop())
+      this.subscriptions.map(({ eventSubSubscription }) =>
+        eventSubSubscription.stop()
+      )
     );
     if (this.eventSub instanceof EventSubListener) {
       await this.eventSub.unlisten();
@@ -226,7 +267,10 @@ export class EventSub implements Producer {
   }
 
   private onChannelUpdate(event: EventSubChannelUpdateEvent) {
-    if (this.lastCategory && this.lastCategory !== event.categoryId) {
+    if (
+      this.emittedTypes.includes("stream-change-category") &&
+      this.lastCategory !== event.categoryId
+    ) {
       this.lastCategory = event.categoryId;
       this.emitter.emit({
         type: "stream-change-category",
@@ -234,7 +278,10 @@ export class EventSub implements Producer {
         categoryName: event.categoryName,
       });
     }
-    if (this.lastTitle && this.lastTitle !== event.streamTitle) {
+    if (
+      this.emittedTypes.includes("stream-change-title") &&
+      this.lastTitle !== event.streamTitle
+    ) {
       this.lastTitle = event.streamTitle;
       this.emitter.emit({
         type: "stream-change-title",
@@ -319,4 +366,13 @@ export class EventSub implements Producer {
       );
     }
   }
+}
+
+interface Subscription {
+  eventClass: Class;
+  eventSubSubscription: EventSubSubscription;
+}
+
+interface Class {
+  new (...args: any[]): unknown;
 }
