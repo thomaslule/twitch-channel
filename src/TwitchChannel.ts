@@ -47,7 +47,7 @@ export class TwitchChannel {
     this.emitter.on("error", (error) => {
       log.error(
         twitchEmitter,
-        "an uncaught error happened in a listener",
+        "An uncaught error happened in a listener",
         error
       );
     });

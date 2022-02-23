@@ -55,7 +55,7 @@ export class ChatBot implements Producer {
       const mods = await this.bot.mods(this.config.channel);
       this.isMod = this.isBroadcaster || mods.includes(this.config.bot_name);
     }
-    log.info(this.emitter, "connected to the IRC chat");
+    log.info(this.emitter, "Connected to the IRC chat");
   }
 
   public async disconnect() {
@@ -80,7 +80,7 @@ export class ChatBot implements Producer {
             );
             if (!viewer) {
               throw new Error(
-                `ban: couldnt get the twitch viewer with id ${userstate["target-user-id"]}`
+                `Couldnt get the twitch viewer with id ${userstate["target-user-id"]}`
               );
             }
             this.emitter.emit({
@@ -154,9 +154,7 @@ export class ChatBot implements Producer {
         this.logErrors("hosted", async () => {
           const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
-            throw new Error(
-              `host: couldnt get the twitch viewer named ${username}`
-            );
+            throw new Error(`Couldnt get the twitch viewer named ${username}`);
           }
           this.emitter.emit({
             type,
@@ -173,9 +171,7 @@ export class ChatBot implements Producer {
         this.logErrors("hosting", async () => {
           const target = await this.apiClient.users.getUserByName(username);
           if (!target) {
-            throw new Error(
-              `host: couldnt get the twitch viewer named ${username}`
-            );
+            throw new Error(`Couldnt get the twitch viewer named ${username}`);
           }
           this.emitter.emit({
             type,
@@ -191,9 +187,7 @@ export class ChatBot implements Producer {
         this.logErrors("messagedeleted", async () => {
           const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
-            throw new Error(
-              `host: couldnt get the twitch viewer named ${username}`
-            );
+            throw new Error(`Couldnt get the twitch viewer named ${username}`);
           }
           this.emitter.emit({
             type,
@@ -209,9 +203,7 @@ export class ChatBot implements Producer {
         this.logErrors("raided", async () => {
           const viewer = await this.apiClient.users.getUserByName(raider);
           if (!viewer) {
-            throw new Error(
-              `raid: couldnt get the twitch viewer named ${raider}`
-            );
+            throw new Error(`Couldnt get the twitch viewer named ${raider}`);
           }
           // viewers arg is typed as number by the lib but it comes as a string
           const viewers = Number.parseInt(viewersString, 10);
@@ -236,9 +228,7 @@ export class ChatBot implements Producer {
         this.logErrors("subscription", async () => {
           const viewer = await this.apiClient.users.getUserByName(username);
           if (!viewer) {
-            throw new Error(
-              `subscription: couldnt get the twitch viewer named ${username}`
-            );
+            throw new Error(`Couldnt get the twitch viewer named ${username}`);
           }
           const { plan } = method;
           const tier = !plan || plan === "Prime" ? "1000" : plan;
@@ -259,7 +249,7 @@ export class ChatBot implements Producer {
             const viewer = await this.apiClient.users.getUserByName(username);
             if (!viewer) {
               throw new Error(
-                `resub: couldnt get the twitch viewer named ${username}`
+                `Couldnt get the twitch viewer named ${username}`
               );
             }
             const months = Number.parseInt(
@@ -288,13 +278,13 @@ export class ChatBot implements Producer {
             const viewer = await this.apiClient.users.getUserByName(recipient);
             if (!viewer) {
               throw new Error(
-                `subgift: couldnt get the twitch viewer named ${recipient}`
+                `Couldnt get the twitch viewer named ${recipient}`
               );
             }
             const gifter = await this.apiClient.users.getUserByName(username);
             if (!gifter) {
               throw new Error(
-                `subgift: couldnt get the twitch viewer named ${username}`
+                `Couldnt get the twitch viewer named ${username}`
               );
             }
             const { plan } = method;
@@ -326,7 +316,7 @@ export class ChatBot implements Producer {
             const viewer = await this.apiClient.users.getUserByName(username);
             if (!viewer) {
               throw new Error(
-                `subscription: couldnt get the twitch viewer named ${username}`
+                `Couldnt get the twitch viewer named ${username}`
               );
             }
             this.emitter.emit({
@@ -353,7 +343,7 @@ export class ChatBot implements Producer {
     } catch (error) {
       log.error(
         this.emitter,
-        `an error happened during an IRC ${tmiEvent} event`,
+        `An error happened during an IRC ${tmiEvent} event`,
         error
       );
     }

@@ -8,7 +8,7 @@ import config from "./config.js";
 const channel = new TwitchChannel({ ...config, port: undefined });
 
 channel.on("log", (event) => {
-  if (event.level !== "debug") console.log(event);
+  console.log(`[${event.level}] ${event.message}`, event.error);
 });
 channel.on("follow", console.log);
 

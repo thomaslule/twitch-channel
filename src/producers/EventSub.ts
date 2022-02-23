@@ -42,13 +42,13 @@ export class EventSub implements Producer {
     const logger = {
       custom: (level: number, message: string) => {
         if (level === 0 || level === 1) {
-          log.error(this.emitter, message);
+          log.error(this.emitter, `EventSub: ${message}`);
         } else if (level === 2) {
-          log.warn(this.emitter, message);
+          log.warn(this.emitter, `EventSub: ${message}`);
         } else if (level === 3) {
-          log.info(this.emitter, message);
+          log.info(this.emitter, `EventSub: ${message}`);
         } else if (level === 4) {
-          log.debug(this.emitter, message);
+          log.debug(this.emitter, `EventSub: ${message}`);
         }
       },
     };
@@ -107,12 +107,12 @@ export class EventSub implements Producer {
       if (type === "ban") {
         subscription = await this.eventSub.subscribeToChannelBanEvents(
           this.channel,
-          (event) => this.onBan(event)
+          (event) => this.logErrors(type, () => this.onBan(event))
         );
       } else if (type === "follow") {
         subscription = await this.eventSub.subscribeToChannelFollowEvents(
           this.channel,
-          (event) => this.onFollow(event)
+          (event) => this.logErrors(type, () => this.onFollow(event))
         );
       } else if (type === "hype-train-begin") {
         subscription =
@@ -125,31 +125,34 @@ export class EventSub implements Producer {
       } else if (type === "hype-train-end") {
         subscription = await this.eventSub.subscribeToChannelHypeTrainEndEvents(
           this.channel,
-          (event) => this.onHypeTrainEnd(event)
+          (event) => this.logErrors(type, () => this.onHypeTrainEnd(event))
         );
       } else if (type === "reward-redeem") {
         subscription =
           await this.eventSub.subscribeToChannelRedemptionAddEvents(
             this.channel,
-            (event) => this.onRewardRedeem(event)
+            (event) => this.logErrors(type, () => this.onRewardRedeem(event))
           );
       } else if (type === "sub-gift") {
         subscription =
           await this.eventSub.subscribeToChannelSubscriptionGiftEvents(
             this.channel,
-            (event) => this.onSubGift(event)
+            (event) => this.logErrors(type, () => this.onSubGift(event))
           );
       } else if (type === "stream-begin") {
         subscription = await this.eventSub.subscribeToStreamOnlineEvents(
           this.channel,
-          (event) => this.onOnline(event)
+          (event) => this.logErrors(type, () => this.onOnline(event))
         );
       } else if (type === "stream-change-category") {
         if (!this.lastCategory && !this.lastTitle) {
           // we are not yet subscribed to channel updates
           subscription = await this.eventSub.subscribeToChannelUpdateEvents(
             this.channel,
-            (event) => this.onChannelUpdate(event)
+            (event) =>
+              this.logErrors("channel-update", () =>
+                this.onChannelUpdate(event)
+              )
           );
         }
         const channel = await this.apiClient.channels.getChannelInfo(
@@ -162,7 +165,10 @@ export class EventSub implements Producer {
           // we are not yet subscribed to channel updates
           subscription = await this.eventSub.subscribeToChannelUpdateEvents(
             this.channel,
-            (event) => this.onChannelUpdate(event)
+            (event) =>
+              this.logErrors("channel-update", () =>
+                this.onChannelUpdate(event)
+              )
           );
         }
         const channel = await this.apiClient.channels.getChannelInfo(
@@ -173,7 +179,7 @@ export class EventSub implements Producer {
       } else if (type === "stream-end") {
         subscription = await this.eventSub.subscribeToStreamOfflineEvents(
           this.channel,
-          () => this.onOffline()
+          () => this.logErrors(type, () => this.onOffline())
         );
       }
       if (subscription) {
@@ -184,12 +190,20 @@ export class EventSub implements Producer {
       } else {
         return false;
       }
-    } catch (error) {
-      log.error(
-        this.emitter,
-        `event sub failed to subscribe to ${type} event`,
-        error
-      );
+    } catch (error: any) {
+      if (error.statusCode === 403) {
+        log.debug(
+          this.emitter,
+          `EventSub failed to subscribe to ${type} event because the target channel did not authorize the client`
+        );
+      } else {
+        log.error(
+          this.emitter,
+          `EventSub failed to subscribe to ${type} event`,
+          error
+        );
+      }
+
       return false;
     }
   }
@@ -289,5 +303,20 @@ export class EventSub implements Producer {
       tier: event.tier,
       total: event.cumulativeAmount ?? undefined,
     });
+  }
+
+  private async logErrors(
+    tmiEvent: string,
+    handler: () => void | Promise<void>
+  ) {
+    try {
+      await handler();
+    } catch (error) {
+      log.error(
+        this.emitter,
+        `An error happened during an EventSub ${tmiEvent} event`,
+        error
+      );
+    }
   }
 }

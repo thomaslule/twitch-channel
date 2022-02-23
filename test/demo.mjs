@@ -6,7 +6,9 @@ import config from "./config.js";
 
 const channel = new TwitchChannel(config);
 
-channel.on("log", console.log);
+channel.on("log", (event) => {
+  console.log(`[${event.level}] ${event.message}`, event.error);
+});
 channel.on("ban", console.log);
 channel.on("chat", console.log);
 channel.on("cheer", console.log);
