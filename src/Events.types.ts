@@ -205,6 +205,9 @@ export interface RewardRedeemEvent {
 export interface SlowModeEvent {
   type: "slow-mode";
   enabled: boolean;
+  /**
+   * In seconds.
+   */
   interval: number;
 }
 
@@ -261,6 +264,9 @@ export interface SubEvent {
   viewerName: string;
   message: string;
   months: number;
+  /**
+   * Prime subs are considered a tier "1000".
+   */
   tier: "1000" | "2000" | "3000";
 }
 
@@ -273,10 +279,24 @@ export interface SubEvent {
  */
 export interface SubGiftEvent {
   type: "sub-gift";
+  /**
+   * Can be undefined if it is an anonymous gift.
+   */
   viewerId?: string;
+  /**
+   * Can be undefined if it is an anonymous gift.
+   */
   viewerName?: string;
   number: number;
+  /**
+   * The cumulative number of gifts from this user.
+   *
+   * Can be undefined if not shared.
+   */
   total?: number;
+  /**
+   * Prime subs are considered a tier "1000".
+   */
   tier: "1000" | "2000" | "3000";
 }
 
@@ -289,10 +309,19 @@ export interface SubGiftEvent {
  */
 export interface SubGiftReceivedEvent {
   type: "sub-gift-received";
-  recipientId?: string;
-  recipientName?: string;
-  gifterId: string;
-  gifterName: string;
+  recipientId: string;
+  recipientName: string;
+  /**
+   * Can be undefined if it is an anonymous gift.
+   */
+  gifterId?: string;
+  /**
+   * Can be undefined if it is an anonymous gift.
+   */
+  gifterName?: string;
+  /**
+   * Prime subs are considered a tier "1000".
+   */
   tier: "1000" | "2000" | "3000";
 }
 
@@ -315,6 +344,9 @@ export interface TimeoutEvent {
   type: "timeout";
   viewerId: string;
   viewerName: string;
+  /**
+   * In seconds.
+   */
   duration: number;
 }
 

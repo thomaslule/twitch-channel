@@ -281,20 +281,17 @@ export class ChatBot implements Producer {
                 `Couldnt get the twitch viewer named ${recipient}`
               );
             }
-            const gifter = await this.apiClient.users.getUserByName(username);
-            if (!gifter) {
-              throw new Error(
-                `Couldnt get the twitch viewer named ${username}`
-              );
-            }
+            const gifter = username
+              ? await this.apiClient.users.getUserByName(username)
+              : undefined;
             const { plan } = method;
             const tier = !plan || plan === "Prime" ? "1000" : plan;
             this.emitter.emit({
               type,
               recipientId: viewer.id,
               recipientName: viewer.displayName,
-              gifterId: gifter.id,
-              gifterName: gifter.displayName,
+              gifterId: gifter?.id,
+              gifterName: gifter?.displayName,
               tier,
             });
           });
