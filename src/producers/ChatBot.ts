@@ -291,8 +291,8 @@ export class ChatBot implements Producer {
             const tier = !plan || plan === "Prime" ? "1000" : plan;
             this.emitter.emit({
               type,
-              viewerId: viewer.id,
-              viewerName: viewer.displayName,
+              recipientId: viewer.id,
+              recipientName: viewer.displayName,
               gifterId: gifter.id,
               gifterName: gifter.displayName,
               tier,

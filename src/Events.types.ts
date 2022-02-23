@@ -165,8 +165,8 @@ export interface SubGiftEvent {
 
 export interface SubGiftReceivedEvent {
   type: "sub-gift-received";
-  viewerId?: string;
-  viewerName?: string;
+  recipientId?: string;
+  recipientName?: string;
   gifterId: string;
   gifterName: string;
   tier: "1000" | "2000" | "3000";
