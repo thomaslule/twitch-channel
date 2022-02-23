@@ -106,14 +106,21 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  *
  * From here you have 2 choices:
  *
- * Either you provide both {@link OptionalConfig.callbackUrl} and
+ * - Either you provide both {@link OptionalConfig.callbackUrl} and
  * {@link OptionalConfig.port}, and the lib will start an http server that
  * will listen to twitch's requests.
  *
- * Or, if you already have an Express-like server, you provide only
+ * - Or, if you already have an Express-like server, you provide only
  * {@link OptionalConfig.callbackUrl} and you call
  * {@link TwitchChannel.applyEventSubMiddleware} on your server, and the lib
  * will add a middleware to your server so it receives twitch's requests.
+ *
+ * Some events require your client to be authorized by the channel's owner. To
+ * do that, you must create an
+ * [OAuth flow](https://dev.twitch.tv/docs/authentication#getting-tokens)
+ * where the user generates a token using your app's client id and containing
+ * the required scopes. Once the channel's owner have authorized your app, you
+ * don't need the token.
  *
  * @category Base
  */
