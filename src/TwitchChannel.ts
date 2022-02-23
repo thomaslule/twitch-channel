@@ -94,7 +94,7 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  * | {@link SubGiftReceivedEvent}      |         X        |                   |                     |                       |                     |
  * | {@link SubGiftEvent}              |                  |                   |                     |                       |          X          |
  * | {@link SubsOnlyEvent}             |         X        |                   |                     |                       |                     |
- * | {@link TimeoutEvent}              |                  |         X         |                     |                       |                     |
+ * | {@link TimeoutEvent}              |                  |         X         |                     |                       |          X          |
  *
  * ## EventSub
  *

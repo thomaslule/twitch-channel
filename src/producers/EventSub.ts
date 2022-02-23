@@ -105,14 +105,20 @@ export class EventSub implements Producer {
   public async produceEvents(type: EventType): Promise<boolean> {
     try {
       if (type === "ban") {
-        const subscription = await this.eventSub.subscribeToChannelBanEvents(
-          this.channel,
-          (event) => this.logErrors(type, () => this.onBan(event))
-        );
-        this.subscriptions.push({
-          eventClass: EventSubChannelBanEvent,
-          eventSubSubscription: subscription,
-        });
+        if (
+          !this.subscriptions.find(
+            ({ eventClass }) => eventClass === EventSubChannelBanEvent
+          )
+        ) {
+          const subscription = await this.eventSub.subscribeToChannelBanEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onBan(event))
+          );
+          this.subscriptions.push({
+            eventClass: EventSubChannelBanEvent,
+            eventSubSubscription: subscription,
+          });
+        }
       } else if (type === "follow") {
         const subscription = await this.eventSub.subscribeToChannelFollowEvents(
           this.channel,
@@ -225,6 +231,21 @@ export class EventSub implements Producer {
           eventClass: EventSubStreamOfflineEvent,
           eventSubSubscription: subscription,
         });
+      } else if (type === "timeout") {
+        if (
+          !this.subscriptions.find(
+            ({ eventClass }) => eventClass === EventSubChannelBanEvent
+          )
+        ) {
+          const subscription = await this.eventSub.subscribeToChannelBanEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onBan(event))
+          );
+          this.subscriptions.push({
+            eventClass: EventSubChannelBanEvent,
+            eventSubSubscription: subscription,
+          });
+        }
       } else {
         return false;
       }
@@ -259,11 +280,20 @@ export class EventSub implements Producer {
   }
 
   public onBan(event: EventSubChannelBanEvent): void {
-    this.emitter.emit({
-      type: "ban",
-      viewerId: event.userId,
-      viewerName: event.userDisplayName,
-    });
+    if (event.isPermanent && this.emittedTypes.includes("ban")) {
+      this.emitter.emit({
+        type: "ban",
+        viewerId: event.userId,
+        viewerName: event.userDisplayName,
+      });
+    } else if (!event.isPermanent && this.emittedTypes.includes("timeout")) {
+      this.emitter.emit({
+        type: "timeout",
+        viewerId: event.userId,
+        viewerName: event.userDisplayName,
+        duration: Math.round((event.endDate!.getTime() - Date.now()) / 1000),
+      });
+    }
   }
 
   private onChannelUpdate(event: EventSubChannelUpdateEvent) {
