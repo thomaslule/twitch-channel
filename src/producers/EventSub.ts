@@ -7,6 +7,7 @@ import {
   EventSubChannelSubscriptionGiftEvent,
   EventSubChannelUpdateEvent,
   EventSubListener,
+  EventSubMiddleware,
   EventSubStreamOnlineEvent,
   EventSubSubscription,
   ReverseProxyAdapter,
@@ -21,7 +22,7 @@ import { Producer } from "./Producer.types";
 
 export class EventSub implements Producer {
   public name = "EventSub";
-  private listener: EventSubListener;
+  private eventSub: EventSubListener | EventSubMiddleware;
   private subscriptions: EventSubSubscription[] = [];
   private channel!: HelixUser;
   private lastCategory?: string;
@@ -37,28 +38,50 @@ export class EventSub implements Producer {
     private apiClient: ApiClient
   ) {
     const callbackUrl = new URL(this.config.callbackUrl!);
-    this.listener = new EventSubListener({
-      apiClient,
-      adapter: new ReverseProxyAdapter({
+    const secret = randomBytes(20).toString("hex");
+    const logger = {
+      custom: (level: number, message: string) => {
+        if (level === 0 || level === 1) {
+          log.error(this.emitter, message);
+        } else if (level === 2) {
+          log.warn(this.emitter, message);
+        } else if (level === 3) {
+          log.info(this.emitter, message);
+        } else if (level === 4) {
+          log.debug(this.emitter, message);
+        }
+      },
+    };
+    if (this.config.port) {
+      this.eventSub = new EventSubListener({
+        apiClient,
+        adapter: new ReverseProxyAdapter({
+          hostName: callbackUrl.hostname,
+          pathPrefix: callbackUrl.pathname,
+          port: this.config.port,
+        }),
+        secret,
+        logger,
+      });
+    } else {
+      this.eventSub = new EventSubMiddleware({
+        apiClient,
         hostName: callbackUrl.hostname,
         pathPrefix: callbackUrl.pathname,
-        port: this.config.port,
-      }),
-      secret: randomBytes(20).toString("hex"),
-      logger: {
-        custom: (level, message) => {
-          if (level === 0 || level === 1) {
-            log.error(this.emitter, message);
-          } else if (level === 2) {
-            log.warn(this.emitter, message);
-          } else if (level === 3) {
-            log.info(this.emitter, message);
-          } else if (level === 4) {
-            log.debug(this.emitter, message);
-          }
-        },
-      },
-    });
+        secret,
+        logger,
+      });
+    }
+  }
+
+  public async applyMiddleware(app: any) {
+    if (this.eventSub instanceof EventSubMiddleware) {
+      await this.eventSub.apply(app);
+    } else {
+      throw new Error(
+        "Cannot use EventSub middleware when the 'port' property is present in the options"
+      );
+    }
   }
 
   public async init() {
@@ -70,7 +93,11 @@ export class EventSub implements Producer {
     }
     this.channel = channel;
 
-    await this.listener.listen();
+    if (this.eventSub instanceof EventSubListener) {
+      await this.eventSub.listen();
+    } else {
+      await this.eventSub.markAsReady();
+    }
   }
 
   public async produceEvents(type: EventType): Promise<boolean> {
@@ -78,49 +105,49 @@ export class EventSub implements Producer {
       let subscription: EventSubSubscription | undefined;
       let noSubscriptionNeeded = false;
       if (type === "ban") {
-        subscription = await this.listener.subscribeToChannelBanEvents(
+        subscription = await this.eventSub.subscribeToChannelBanEvents(
           this.channel,
           (event) => this.onBan(event)
         );
       } else if (type === "follow") {
-        subscription = await this.listener.subscribeToChannelFollowEvents(
+        subscription = await this.eventSub.subscribeToChannelFollowEvents(
           this.channel,
           (event) => this.onFollow(event)
         );
       } else if (type === "hype-train-begin") {
         subscription =
-          await this.listener.subscribeToChannelHypeTrainBeginEvents(
+          await this.eventSub.subscribeToChannelHypeTrainBeginEvents(
             this.channel,
             () => {
               this.emitter.emit({ type });
             }
           );
       } else if (type === "hype-train-end") {
-        subscription = await this.listener.subscribeToChannelHypeTrainEndEvents(
+        subscription = await this.eventSub.subscribeToChannelHypeTrainEndEvents(
           this.channel,
           (event) => this.onHypeTrainEnd(event)
         );
       } else if (type === "reward-redeem") {
         subscription =
-          await this.listener.subscribeToChannelRedemptionAddEvents(
+          await this.eventSub.subscribeToChannelRedemptionAddEvents(
             this.channel,
             (event) => this.onRewardRedeem(event)
           );
       } else if (type === "sub-gift") {
         subscription =
-          await this.listener.subscribeToChannelSubscriptionGiftEvents(
+          await this.eventSub.subscribeToChannelSubscriptionGiftEvents(
             this.channel,
             (event) => this.onSubGift(event)
           );
       } else if (type === "stream-begin") {
-        subscription = await this.listener.subscribeToStreamOnlineEvents(
+        subscription = await this.eventSub.subscribeToStreamOnlineEvents(
           this.channel,
           (event) => this.onOnline(event)
         );
       } else if (type === "stream-change-category") {
         if (!this.lastCategory && !this.lastTitle) {
           // we are not yet subscribed to channel updates
-          subscription = await this.listener.subscribeToChannelUpdateEvents(
+          subscription = await this.eventSub.subscribeToChannelUpdateEvents(
             this.channel,
             (event) => this.onChannelUpdate(event)
           );
@@ -133,7 +160,7 @@ export class EventSub implements Producer {
       } else if (type === "stream-change-title") {
         if (!this.lastCategory && !this.lastTitle) {
           // we are not yet subscribed to channel updates
-          subscription = await this.listener.subscribeToChannelUpdateEvents(
+          subscription = await this.eventSub.subscribeToChannelUpdateEvents(
             this.channel,
             (event) => this.onChannelUpdate(event)
           );
@@ -144,7 +171,7 @@ export class EventSub implements Producer {
         this.lastTitle = channel!.title;
         noSubscriptionNeeded = true;
       } else if (type === "stream-end") {
-        subscription = await this.listener.subscribeToStreamOfflineEvents(
+        subscription = await this.eventSub.subscribeToStreamOfflineEvents(
           this.channel,
           () => this.onOffline()
         );
@@ -171,7 +198,9 @@ export class EventSub implements Producer {
     await Promise.all(
       this.subscriptions.map((subscription) => subscription.stop())
     );
-    await this.listener.unlisten();
+    if (this.eventSub instanceof EventSubListener) {
+      await this.eventSub.unlisten();
+    }
   }
 
   public onBan(event: EventSubChannelBanEvent): void {

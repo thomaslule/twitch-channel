@@ -138,6 +138,15 @@ export class TwitchChannel {
     await Promise.all([this.chatBot.disconnect(), this.eventSub?.stop()]);
     this.emitter.removeAllListeners();
   }
+
+  public async applyEventSubMiddleware(app: any) {
+    if (!this.eventSub) {
+      throw new Error(
+        "Cannot use EventSub when the 'callbackUrl' property is absent from the options"
+      );
+    }
+    await this.eventSub.applyMiddleware(app);
+  }
 }
 
 export interface TwitchEventEmitter {
