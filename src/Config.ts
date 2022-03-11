@@ -53,4 +53,8 @@ export interface OptionalConfig {
    * If port is not provided, the lib wont start a server. See the EventSub paragraph in {@link TwitchChannel}.
    */
   port: number;
+  /**
+   * Set to true to delete all your application's EventSub subscriptions before creating new ones, during {@link TwitchChannel.connect}
+   */
+  removePreviousEventSubSubscriptions: boolean;
 }

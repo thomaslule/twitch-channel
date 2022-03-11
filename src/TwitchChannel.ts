@@ -254,13 +254,13 @@ export class TwitchChannel {
    *
    * See the EventSub paragraph in {@link TwitchChannel}.
    */
-  public async applyEventSubMiddleware(app: Express) {
+  public applyEventSubMiddleware(app: Express) {
     if (!this.eventSub) {
       throw new Error(
         "Cannot use EventSub when the 'callbackUrl' property is absent from the options"
       );
     }
-    await this.eventSub.applyMiddleware(app);
+    this.eventSub.applyMiddleware(app);
   }
 }
 

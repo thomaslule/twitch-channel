@@ -77,9 +77,9 @@ export class EventSub implements Producer {
     }
   }
 
-  public async applyMiddleware(app: Express) {
+  public applyMiddleware(app: Express) {
     if (this.eventSub instanceof EventSubMiddleware) {
-      await this.eventSub.apply(app);
+      this.eventSub.apply(app);
     } else {
       throw new Error(
         "Cannot use EventSub middleware when the 'port' property is present in the options"
@@ -100,6 +100,9 @@ export class EventSub implements Producer {
       await this.eventSub.listen();
     } else {
       await this.eventSub.markAsReady();
+    }
+    if (this.config.removePreviousEventSubSubscriptions) {
+      await this.apiClient.eventSub.deleteAllSubscriptions();
     }
   }
 
