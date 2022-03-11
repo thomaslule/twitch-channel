@@ -1,6 +1,7 @@
 import { ApiClient } from "@twurple/api";
 import { ClientCredentialsAuthProvider } from "@twurple/auth";
 import { EventEmitter } from "events";
+import { Express } from "express";
 
 import { Config } from "./Config";
 import {
@@ -253,7 +254,7 @@ export class TwitchChannel {
    *
    * See the EventSub paragraph in {@link TwitchChannel}.
    */
-  public async applyEventSubMiddleware(app: any) {
+  public async applyEventSubMiddleware(app: Express) {
     if (!this.eventSub) {
       throw new Error(
         "Cannot use EventSub when the 'callbackUrl' property is absent from the options"
