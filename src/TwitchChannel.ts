@@ -129,6 +129,7 @@ export class TwitchChannel {
   private eventSub?: EventSub;
   private chatBot: ChatBot;
   private orchestrator: ProducersOrchestrator;
+  private started = false;
 
   constructor(private config: Config) {
     const twitchEmitter: TwitchEventEmitter = {
@@ -228,6 +229,10 @@ export class TwitchChannel {
    * Connect to the IRC chat, subscribe to EventSub, start emitting events.
    */
   public async connect() {
+    if (this.started) {
+      throw new Error("Reconnecting is not supported");
+    }
+    this.started = true;
     await Promise.all([this.chatBot.connect(), this.eventSub?.init()]);
     await this.orchestrator.subscribeProducers();
   }
