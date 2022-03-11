@@ -1,5 +1,6 @@
 import { stdin as input, stdout as output } from "node:process";
-import * as readline from "node:readline/promises";
+import * as readline from "node:readline";
+import { promisify } from "node:util";
 
 import { TwitchChannel } from "../lib/index.js";
 import config from "./config.js";
@@ -36,7 +37,8 @@ await channel.connect();
 await new Promise((resolve) => setTimeout(resolve, 3000));
 
 const rl = readline.createInterface({ input, output });
-await rl.question("Press enter to close\n");
+const question = promisify(rl.question).bind(rl);
+await question("Press enter to close\n");
 rl.close();
 
 await channel.disconnect();

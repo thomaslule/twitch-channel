@@ -21,8 +21,8 @@ export class ChatBot implements Producer {
     private apiClient: ApiClient
   ) {
     this.config = config as ChatBotConfig;
-    this.isLoggedIn = !!this.config.bot_name && !!this.config.bot_token;
-    this.isBroadcaster = this.config.bot_name === this.config.channel;
+    this.isLoggedIn = !!this.config.botName && !!this.config.botToken;
+    this.isBroadcaster = this.config.botName === this.config.channel;
     this.bot = Client({
       connection: {
         secure: true,
@@ -30,8 +30,8 @@ export class ChatBot implements Producer {
       },
       identity: this.isLoggedIn
         ? {
-            username: this.config.bot_name,
-            password: this.config.bot_token,
+            username: this.config.botName,
+            password: this.config.botToken,
           }
         : undefined,
       channels: [this.config.channel],
@@ -53,7 +53,7 @@ export class ChatBot implements Producer {
     await this.bot.connect();
     if (this.isLoggedIn) {
       const mods = await this.bot.mods(this.config.channel);
-      this.isMod = this.isBroadcaster || mods.includes(this.config.bot_name);
+      this.isMod = this.isBroadcaster || mods.includes(this.config.botName);
     }
     log.info(this.emitter, "Connected to the IRC chat");
   }
@@ -348,6 +348,6 @@ export class ChatBot implements Producer {
 }
 
 interface ChatBotConfig extends Config {
-  bot_name: string;
-  bot_token: string;
+  botName: string;
+  botToken: string;
 }
