@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/thomaslule/twitch-channel#readme",
   "devDependencies": {
+    "@types/express": "^4.17.13",
     "@types/node": "^17.0.18",
     "@types/tmi.js": "^1.8.1",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
@@ -40,7 +41,6 @@
     "@twurple/api": "^5.0.17",
     "@twurple/auth": "^5.0.17",
     "@twurple/eventsub": "^5.0.17",
-    "@types/express": "^4.17.13",
     "tmi.js": "^1.8.5"
   }
 }

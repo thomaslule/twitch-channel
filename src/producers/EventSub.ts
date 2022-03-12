@@ -133,39 +133,43 @@ export class EventSub implements Producer {
           eventSubSubscription: subscription,
         });
       } else if (type === "hype-train-begin") {
-        const subscription = await this.eventSub.subscribeToChannelHypeTrainBeginEvents(
-          this.channel,
-          () => {
-            this.emitter.emit({ type });
-          }
-        );
+        const subscription =
+          await this.eventSub.subscribeToChannelHypeTrainBeginEvents(
+            this.channel,
+            () => {
+              this.emitter.emit({ type });
+            }
+          );
         this.subscriptions.push({
           eventClass: EventSubChannelBanEvent,
           eventSubSubscription: subscription,
         });
       } else if (type === "hype-train-end") {
-        const subscription = await this.eventSub.subscribeToChannelHypeTrainEndEvents(
-          this.channel,
-          (event) => this.logErrors(type, () => this.onHypeTrainEnd(event))
-        );
+        const subscription =
+          await this.eventSub.subscribeToChannelHypeTrainEndEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onHypeTrainEnd(event))
+          );
         this.subscriptions.push({
           eventClass: EventSubChannelHypeTrainEndEvent,
           eventSubSubscription: subscription,
         });
       } else if (type === "reward-redeem") {
-        const subscription = await this.eventSub.subscribeToChannelRedemptionAddEvents(
-          this.channel,
-          (event) => this.logErrors(type, () => this.onRewardRedeem(event))
-        );
+        const subscription =
+          await this.eventSub.subscribeToChannelRedemptionAddEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onRewardRedeem(event))
+          );
         this.subscriptions.push({
           eventClass: EventSubChannelRedemptionAddEvent,
           eventSubSubscription: subscription,
         });
       } else if (type === "sub-gift") {
-        const subscription = await this.eventSub.subscribeToChannelSubscriptionGiftEvents(
-          this.channel,
-          (event) => this.logErrors(type, () => this.onSubGift(event))
-        );
+        const subscription =
+          await this.eventSub.subscribeToChannelSubscriptionGiftEvents(
+            this.channel,
+            (event) => this.logErrors(type, () => this.onSubGift(event))
+          );
         this.subscriptions.push({
           eventClass: EventSubChannelSubscriptionGiftEvent,
           eventSubSubscription: subscription,
@@ -182,13 +186,14 @@ export class EventSub implements Producer {
       } else if (type === "stream-change-category") {
         if (!this.lastCategory && !this.lastTitle) {
           // we are not yet subscribed to channel updates
-          const subscription = await this.eventSub.subscribeToChannelUpdateEvents(
-            this.channel,
-            (event) =>
-              this.logErrors("channel-update", () =>
-                this.onChannelUpdate(event)
-              )
-          );
+          const subscription =
+            await this.eventSub.subscribeToChannelUpdateEvents(
+              this.channel,
+              (event) =>
+                this.logErrors("channel-update", () =>
+                  this.onChannelUpdate(event)
+                )
+            );
           this.subscriptions.push({
             eventClass: EventSubChannelUpdateEvent,
             eventSubSubscription: subscription,
@@ -204,13 +209,14 @@ export class EventSub implements Producer {
             ({ eventClass }) => eventClass === EventSubChannelUpdateEvent
           )
         ) {
-          const subscription = await this.eventSub.subscribeToChannelUpdateEvents(
-            this.channel,
-            (event) =>
-              this.logErrors("channel-update", () =>
-                this.onChannelUpdate(event)
-              )
-          );
+          const subscription =
+            await this.eventSub.subscribeToChannelUpdateEvents(
+              this.channel,
+              (event) =>
+                this.logErrors("channel-update", () =>
+                  this.onChannelUpdate(event)
+                )
+            );
           this.subscriptions.push({
             eventClass: EventSubChannelUpdateEvent,
             eventSubSubscription: subscription,
