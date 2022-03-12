@@ -14,6 +14,8 @@ import {
   FollowEvent,
   HostEvent,
   HostingEvent,
+  HypeTrainBeginEvent,
+  HypeTrainEndEvent,
   LogEvent,
   MessageDeletedEvent,
   RaidEvent,
@@ -181,6 +183,14 @@ export class TwitchChannel {
   ): void;
   public on(event: "host", handler: (param: HostEvent) => void): void;
   public on(event: "hosting", handler: (param: HostingEvent) => void): void;
+  public on(
+    event: "hype-train-begin",
+    handler: (param: HypeTrainBeginEvent) => void
+  ): void;
+  public on(
+    event: "hype-train-end",
+    handler: (param: HypeTrainEndEvent) => void
+  ): void;
   public on(
     event: "message-deleted",
     handler: (param: MessageDeletedEvent) => void
