@@ -1,6 +1,6 @@
 {
   "name": "twitch-channel",
-  "version": "1.0.0-next.1",
+  "version": "1.0.0-next.2",
   "description": "an event emitter for your twitch channel",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
