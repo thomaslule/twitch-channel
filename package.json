@@ -1,11 +1,10 @@
 {
   "name": "twitch-channel",
-  "version": "0.4.5",
+  "version": "1.0.0-next.1",
   "description": "an event emitter for your twitch channel",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "prepublishOnly": "npm run build && npm run doc",
     "build": "rimraf ./lib && tsc",
     "doc": "typedoc --categorizeByGroup false --excludePrivate --disableSources --readme none --out docs src",
     "demo": "npm run build && node test/demo.mjs",
