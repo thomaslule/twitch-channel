@@ -121,7 +121,10 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  * [OAuth flow](https://dev.twitch.tv/docs/authentication#getting-tokens)
  * where the user generates a token using your app's client id and containing
  * the required scopes. Once the channel's owner have authorized your app, you
- * don't need the token.
+ * don't need the resulting token.
+ *
+ * The needed scopes are: `channel:moderate channel:read:hype_train
+ * channel:read:redemptions channel:read:subscriptions`
  *
  * @category Base
  */
