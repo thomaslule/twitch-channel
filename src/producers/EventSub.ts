@@ -101,9 +101,6 @@ export class EventSub implements Producer {
     } else {
       await this.eventSub.markAsReady();
     }
-    if (this.config.removePreviousEventSubSubscriptions) {
-      await this.apiClient.eventSub.deleteAllSubscriptions();
-    }
   }
 
   public async produceEvents(type: EventType): Promise<boolean> {
