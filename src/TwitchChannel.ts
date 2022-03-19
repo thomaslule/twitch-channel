@@ -105,13 +105,14 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  * server.
  *
  * In order to make it work, your server must be reachable from the internet
- * with HTTPS and a domain name.
+ * with HTTPS and a domain name (you may need a reverse proxy: this lib won't
+ * handle the TLS layer and will listen to HTTP requests only).
  *
  * From here you have 2 choices:
  *
  * - Either you provide both {@link OptionalConfig.callbackUrl} and
  * {@link OptionalConfig.port}, and the lib will start an http server that
- * will listen to twitch's requests.
+ * will listen to twitch's requests on the provided port.
  *
  * - Or, if you already have an Express-like server, you provide only
  * {@link OptionalConfig.callbackUrl} and you call
@@ -126,7 +127,7 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  * don't need the resulting token.
  *
  * The needed scopes are: `channel:moderate channel:read:hype_train
- * channel:read:redemptions channel:read:subscriptions`
+ * channel:read:redemptions channel:read:subscriptions`.
  *
  * @category Base
  */
