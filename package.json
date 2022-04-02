@@ -6,7 +6,7 @@
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "rimraf ./lib && tsc",
-    "doc": "typedoc --categorizeByGroup false --excludePrivate --readme none --out docs src",
+    "doc": "typedoc --categorizeByGroup false --excludePrivate --disableSources --readme none --out docs src",
     "demo": "npm run build && node test/demo.mjs",
     "demo:express": "npm run build && node test/demo-express.mjs",
     "lint": "eslint src/**/*.ts"
