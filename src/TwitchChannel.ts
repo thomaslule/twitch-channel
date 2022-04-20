@@ -74,32 +74,32 @@ import { ProducersOrchestrator } from "./ProducersOrchestrator";
  *
  * Depending on which config you provide, the lib will be able to emit many types of events.
  *
- * | Event                             | Always available | Moderator IRC bot | Broadcaster IRC bot | Unauthorized EventSub | Authorized EventSub |
- * |-----------------------------------|------------------|-------------------|---------------------|-----------------------|---------------------|
- * | {@link BanEvent}                  |                  |         X         |                     |                       |          X          |
- * | {@link ChatEvent}                 |         X        |                   |                     |                       |                     |
- * | {@link CheerEvent}                |         X        |                   |                     |                       |                     |
- * | {@link ClearChatEvent}            |         X        |                   |                     |                       |                     |
- * | {@link EmotesOnlyEvent}           |         X        |                   |                     |                       |                     |
- * | {@link FollowEvent}               |                  |                   |                     |           X           |                     |
- * | {@link FollowersOnlyEvent}        |         X        |                   |                     |                       |                     |
- * | {@link HostEvent}                 |                  |                   |          X          |                       |                     |
- * | {@link HostingEvent}              |         X        |                   |                     |                       |                     |
- * | {@link HypeTrainBeginEvent}       |                  |                   |                     |                       |          X          |
- * | {@link HypeTrainEndEvent}         |                  |                   |                     |                       |          X          |
- * | {@link MessageDeletedEvent}       |         X        |                   |                     |                       |                     |
- * | {@link RaidEvent}                 |         X        |                   |                     |                       |                     |
- * | {@link RewardRedeemEvent}         |                  |                   |                     |                       |          X          |
- * | {@link SlowModeEvent}             |         X        |                   |                     |                       |                     |
- * | {@link StreamBeginEvent}          |                  |                   |                     |           X           |                     |
- * | {@link StreamChangeCategoryEvent} |                  |                   |                     |           X           |                     |
- * | {@link StreamChangeTitleEvent}    |                  |                   |                     |           X           |                     |
- * | {@link StreamEndEvent}            |                  |                   |                     |           X           |                     |
- * | {@link SubEvent}                  |         X        |                   |                     |                       |                     |
- * | {@link SubGiftReceivedEvent}      |         X        |                   |                     |                       |                     |
- * | {@link SubGiftEvent}              |                  |                   |                     |                       |          X          |
- * | {@link SubsOnlyEvent}             |         X        |                   |                     |                       |                     |
- * | {@link TimeoutEvent}              |                  |         X         |                     |                       |          X          |
+ * | Event                             | Always available |   | Moderator IRC bot | Broadcaster IRC bot |   | EventSub | Authorized EventSub |
+ * |-----------------------------------|------------------|---|-------------------|---------------------|---|----------|---------------------|
+ * | {@link BanEvent}                  |                  |   |         X         |                     |   |          |          X          |
+ * | {@link ChatEvent}                 |         X        |   |                   |                     |   |          |                     |
+ * | {@link CheerEvent}                |         X        |   |                   |                     |   |          |                     |
+ * | {@link ClearChatEvent}            |         X        |   |                   |                     |   |          |                     |
+ * | {@link EmotesOnlyEvent}           |         X        |   |                   |                     |   |          |                     |
+ * | {@link FollowEvent}               |                  |   |                   |                     |   |     X    |                     |
+ * | {@link FollowersOnlyEvent}        |         X        |   |                   |                     |   |          |                     |
+ * | {@link HostEvent}                 |                  |   |                   |          X          |   |          |                     |
+ * | {@link HostingEvent}              |         X        |   |                   |                     |   |          |                     |
+ * | {@link HypeTrainBeginEvent}       |                  |   |                   |                     |   |          |          X          |
+ * | {@link HypeTrainEndEvent}         |                  |   |                   |                     |   |          |          X          |
+ * | {@link MessageDeletedEvent}       |         X        |   |                   |                     |   |          |                     |
+ * | {@link RaidEvent}                 |         X        |   |                   |                     |   |          |                     |
+ * | {@link RewardRedeemEvent}         |                  |   |                   |                     |   |          |          X          |
+ * | {@link SlowModeEvent}             |         X        |   |                   |                     |   |          |                     |
+ * | {@link StreamBeginEvent}          |                  |   |                   |                     |   |     X    |                     |
+ * | {@link StreamChangeCategoryEvent} |                  |   |                   |                     |   |     X    |                     |
+ * | {@link StreamChangeTitleEvent}    |                  |   |                   |                     |   |     X    |                     |
+ * | {@link StreamEndEvent}            |                  |   |                   |                     |   |     X    |                     |
+ * | {@link SubEvent}                  |         X        |   |                   |                     |   |          |                     |
+ * | {@link SubGiftReceivedEvent}      |         X        |   |                   |                     |   |          |                     |
+ * | {@link SubGiftEvent}              |                  |   |                   |                     |   |          |          X          |
+ * | {@link SubsOnlyEvent}             |         X        |   |                   |                     |   |          |                     |
+ * | {@link TimeoutEvent}              |                  |   |         X         |                     |   |          |          X          |
  *
  * ## EventSub
  *
