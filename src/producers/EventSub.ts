@@ -41,7 +41,7 @@ export class EventSub implements Producer {
     private apiClient: ApiClient
   ) {
     const callbackUrl = new URL(this.config.callbackUrl!);
-    const secret = randomBytes(20).toString("hex");
+    const secret = config.secret || randomBytes(20).toString("hex");
     const logger = {
       custom: (level: number, message: string) => {
         if (level === 0 || level === 1) {

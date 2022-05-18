@@ -53,4 +53,6 @@ export interface OptionalConfig {
    * If port is not provided, the lib wont start a server. See the EventSub paragraph in {@link TwitchChannel}.
    */
   port: number;
+
+  secret: string;
 }
